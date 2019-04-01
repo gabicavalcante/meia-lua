@@ -5,7 +5,7 @@
 `meia-lua` é uma linguagem inspirada em Lua, e criada durante a disciplina de Linguagem e Programção de Compiladores.
 Nosso objetivo com a linguagem é fornecer flexibilidade e aperfeiçoamento para o domínio de Inteligência Artificial, com ênfase em Jogos Digitais.
 
-Para descrever os aspectos léxicos da linguagem, usaremos a BNF estendida, na qual {a} significa 0 ou mais a's e [a] significa um a opcional. Não-terminais são mostrados como non-terminal, palavras-chave são mostradas como **kword** e outros símbolos terminais são mostrados como `=´. 
+Para descrever os aspectos léxicos da linguagem, usaremos a BNF estendida, na qual {a} significa 0 ou mais a's e [a] significa um a opcional. Não-terminais são mostrados como `non-terminal`, palavras-chave são mostradas como **kword** e outros símbolos terminais são mostrados como `=´. 
 
 ### Convenções Léxicas
 Identificadores podem ser qualquer cadeia de letras, dígitos, e sublinhados que não começam com um dígito.
@@ -25,9 +25,6 @@ Um comentário começa com um hífen duplo (--) em qualquer lugar, desde que for
 
 ###  Valores e Tipos
 
-```
-var ::= Nome
-```
 
 ```
 var ::= expprefixo `[´ exp `]´
@@ -38,6 +35,20 @@ var ::= expprefixo `.´ Nome
 ```
 
 ### Variáveis
+
+Variáveis são espaços usados para armazenar valores.
+
+Existem três tipos de variáveis na nossa linguagem: **variáveis globais**, **variáveis locais** e **campos de tabelas**.
+
+Um nome é uma `string` de caracteres usadas para identificar variável global ou uma variávei local. Ele obedece a forma: uma letra seguida por uma `string` formada de letras, dígitos e underscore (`_`).  
+
+```
+var ::= Nome
+```
+
+O `Nome` denota identificadores. 
+
+Toda variável é uma variável local, e para ser global ela precisa ser explicitamente declarada como [global](#declarações-locais)
 
 ### Comandos
 
@@ -72,7 +83,9 @@ comando ::= if exp then bloco {elseif exp then bloco} [else bloco] end
 #### Chamadas de Função como Comandos
 
 #### Declarações Locais
-
+```
+comando ::= local listadenomes [`=´ listaexp]
+```
 ### Expressões
 
 #### Operadores Aritméticos
