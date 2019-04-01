@@ -19,7 +19,7 @@ repeat    return    then      true      until     while
 
 A linguagem diferencia minúsculas de maiúsculas: `return` é uma palavra reservada, mas `Return` e `RETURN` são dois nomes válidos diferentes. 
  
-Cadeias de caracteres literais podem ser delimitadas através do uso de aspas simples ou aspas duplas(?)
+Cadeias de caracteres literais podem ser delimitadas através do uso de aspas simples ou aspas duplas.
 
 Um comentário começa com um hífen duplo (--) em qualquer lugar, desde que fora de uma cadeia de caracteres.
 
@@ -40,15 +40,25 @@ Variáveis são espaços usados para armazenar valores.
 
 Existem três tipos de variáveis na nossa linguagem: **variáveis globais**, **variáveis locais** e **campos de tabelas**.
 
-Um nome é uma `string` de caracteres usadas para identificar variável global ou uma variávei local. Ele obedece a forma: uma letra seguida por uma `string` formada de letras, dígitos e underscore (`_`).  
+Um nome denota identificadores e são usados para nomear variáveis e campos de tabelas. 
 
 ```
 var ::= Nome
 ```
 
-O `Nome` denota identificadores. 
+`Nome` e é uma `string` de caracteres usadas para identificar variável global ou uma variávei local. Ele obedece a forma: uma letra seguida por uma `string` formada de letras, dígitos e underscore (`_`). 
 
-Toda variável é uma variável local, e para ser global ela precisa ser explicitamente declarada como [global](#declarações-locais)
+`meia-lua` é **case sensitive**, ou seja, letras minúsculas e maiúsculas em nomes são diferentes. 
+
+Toda variável é uma variável local, e para ser global ela precisa ser explicitamente declarada como [global](#declarações-locais). Variáveis locais podem ser acessadas somente por funçnoes definidas dentro do seu escopo. 
+
+Antes da variável receber um valor através da atribuição, o seu valor default é **nil**.
+
+### Palavras reservadas
+
+Palavras especiais são palavras reservadas, ou seja, não podem ser utilizadas como um nome. 
+
+
 
 ### Comandos
 
