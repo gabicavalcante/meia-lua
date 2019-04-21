@@ -1,14 +1,12 @@
 # meia-lua
 
-## linguagem
-
 `meia-lua` é uma linguagem inspirada em Lua, e criada durante a disciplina de Linguagem e Programção de Compiladores.
 Nosso objetivo com a linguagem é fornecer flexibilidade e aperfeiçoamento para o domínio de Inteligência Artificial, com ênfase em Jogos Digitais.
 
 Para descrever os aspectos léxicos da linguagem, usaremos a BNF estendida, na qual {a} significa 0 ou mais a's e [a] significa um a opcional. Não-terminais são mostrados como `non-terminal`, palavras-chave são mostradas como **kword** e outros símbolos terminais são mostrados como `=´. 
 
 ### Convenções Léxicas
-Identificadores podem ser qualquer cadeia de letras, dígitos, e sublinhados que não começam com um dígito.
+*Identificadores* ou *Nomes* podem ser qualquer cadeia de letras, dígitos, e sublinhados que não começam com um dígito. Os identificadores serão úteis para nomear variáveis e *tables*.
 
 ```
 and       break     do        else      elseif
@@ -25,14 +23,12 @@ Um comentário começa com um hífen duplo (--) em qualquer lugar, desde que for
 
 ###  Valores e Tipos
 
+`meia-lua` é uma linguagem dinamicamente tipada, ou seja, as variáveis vão possuir o tipo do valor que elas armazenarem. Os tipos presentes em nossa linguagem são: *nil*, *boolean*, *number*, *integer*, *string* e *table*. 
+O tipo *nil* é usado para representar um conteudo de valor não util. O *boolean* é o tipo dos valores **false** e **true**. O *number* representa os números reais e o *integer* representa os números inteiros. Tanto o **nil**, como o **false** e o número **0** são vistos na linguagem como valores que tornam a condição false. A *string* representa uma cadira de caracteres. 
 
-```
-var ::= expprefixo `[´ exp `]´
-```
+O tipo *table* implementa um array associativo, indexados com valores do tipo string. Tables são heterogêneas, podendo armazenas valores de todos os tipos, menos o **nil**. Além disso, é o tipo da linguagem que pode ser utilizado para estruturar dados, como grafos, árvores, linguagem, etc.
 
-```
-var ::= expprefixo `.´ Nome
-```
+
 
 ### Variáveis
 
@@ -44,6 +40,14 @@ Um nome denota identificadores e são usados para nomear variáveis e campos de 
 
 ```
 var ::= Nome
+```
+
+```
+var ::= expprefixo `[´ exp `]´
+```
+
+```
+var ::= expprefixo `.´ Nome
 ```
 
 `Nome` e é uma `string` de caracteres usadas para identificar variável global ou uma variávei local. Ele obedece a forma: uma letra seguida por uma `string` formada de letras, dígitos e underscore (`_`). 
