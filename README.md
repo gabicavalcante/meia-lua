@@ -34,20 +34,12 @@ O tipo *table* implementa um array associativo, indexados com valores do tipo st
 
 Variáveis são espaços usados para armazenar valores.
 
-Existem três tipos de variáveis na nossa linguagem: **variáveis globais**, **variáveis locais** e **campos de tabelas**.
+Existem dois tipos de variáveis na nossa linguagem: **variáveis globais** e **variáveis locais**.
 
 Um nome denota identificadores e são usados para nomear variáveis e campos de tabelas. 
 
 ```
 var ::= Nome
-```
-
-```
-var ::= expprefixo `[´ exp `]´
-```
-
-```
-var ::= expprefixo `.´ Nome
 ```
 
 `Nome` e é uma `string` de caracteres usadas para identificar variável global ou uma variávei local. Ele obedece a forma: uma letra seguida por uma `string` formada de letras, dígitos e underscore (`_`). 
@@ -57,6 +49,16 @@ var ::= expprefixo `.´ Nome
 Toda variável é uma variável local, e para ser global ela precisa ser explicitamente declarada como [global](#declarações-locais). Variáveis locais podem ser acessadas somente por funçnoes definidas dentro do seu escopo. 
 
 Antes da variável receber um valor através da atribuição, o seu valor default é **nil**.
+
+Colchetes são usados para indexar uma tabela:
+```
+var ::= expprefixo `[´ exp `]´
+```
+
+```
+var ::= expprefixo `.´ Nome
+```
+
 
 ### Palavras reservadas
 
