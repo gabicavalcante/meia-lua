@@ -1,1 +1,5 @@
 .DS_Store
+/alex/tokens
+/alex/tokens.hi
+/alex/tokens.hs
+/alex/tokens.o
