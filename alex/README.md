@@ -8,7 +8,10 @@ $ alex tokens.x
 
 2. A saide será um arquivo `tokens.hs`. Agora execute:
 ```
-$ alex tokens.x
+$ ghc -o tokens tokens.hs
 ```
 
-./tokens < program.ml
+2. Como resultado teremos um arquivo executável `tokens`.
+```
+$ ./tokens < program.ml
+```
