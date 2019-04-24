@@ -1,5 +1,10 @@
 # meia-lua
 
+f
+    -> bloco1
+    -> bloco2
+var -> type, id, value, scopo, tempo de vida e endereço
+
 `meia-lua` é uma linguagem inspirada em Lua, e criada durante a disciplina de Linguagem e Programção de Compiladores.
 Nosso objetivo com a linguagem é fornecer flexibilidade e aperfeiçoamento para o domínio de Inteligência Artificial, com ênfase em Jogos Digitais.
 

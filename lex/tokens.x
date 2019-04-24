@@ -1,5 +1,8 @@
 {
-module Main (main, Token(..), AlexPosn(..), alexScanTokens) where
+module Tokens (getTokens, Token(..), AlexPosn(..), alexScanTokens) where
+
+import System.IO
+import System.IO.Unsafe
 }
 
 %wrapper "posn"
@@ -13,8 +16,7 @@ tokens :-
   "--".*.                                     ;
   int                                         { \p s -> TypeInt p }
   float                                       { \p s -> TypeFloat p }
-  string                                      { \p s -> TypeString p }
-  ptr                                         { \p s -> TypePointer p }
+  string                                      { \p s -> TypeString p } 
   bool                                        { \p s -> TypeBoolean p } 
   $digit+\.$digit+                            { \p s -> FloatLit p (read s) }
   $digit+                                     { \p s -> IntLit p (read s) }
@@ -84,8 +86,7 @@ firstLast xs = tail (init xs)
 data Token =
   TypeInt AlexPosn                |
   TypeFloat AlexPosn              |
-  TypeString AlexPosn             |
-  TypePointer AlexPosn            |
+  TypeString AlexPosn             | 
   TypeBoolean AlexPosn            |
   Attrib AlexPosn                 |
   OpenParenth AlexPosn            |
@@ -144,7 +145,8 @@ data Token =
   Id AlexPosn String    
   deriving (Eq,Show)
 
-main = do
-  s <- getContents
-  print (alexScanTokens s)
+getTokens fn = unsafePerformIO (getTokensAux fn)
+getTokensAux fn = do {fh <- openFile fn ReadMode;
+                      s <- hGetContents fh;
+                      return (alexScanTokens s)}
 }
