@@ -1,5 +1,6 @@
 {
-module Tokens (getTokens, Token(..), AlexPosn(..), alexScanTokens) where
+--module Tokens (main, getTokens, Token(..), AlexPosn(..), alexScanTokens) where
+module Main (main, Token(..), AlexPosn(..), alexScanTokens) where
 
 import System.IO
 import System.IO.Unsafe
@@ -149,4 +150,8 @@ getTokens fn = unsafePerformIO (getTokensAux fn)
 getTokensAux fn = do {fh <- openFile fn ReadMode;
                       s <- hGetContents fh;
                       return (alexScanTokens s)}
+main = do
+  s <- getContents
+  print (alexScanTokens s)
 }
+

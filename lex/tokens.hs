@@ -2,7 +2,8 @@
 {-# LANGUAGE CPP #-}
 {-# LINE 1 "tokens.x" #-}
 
-module Tokens (getTokens, Token(..), AlexPosn(..), alexScanTokens) where
+--module Tokens (main, getTokens, Token(..), AlexPosn(..), alexScanTokens) where
+module Main (main, Token(..), AlexPosn(..), alexScanTokens) where
 
 import System.IO
 import System.IO.Unsafe
@@ -20192,7 +20193,7 @@ alex_actions = array (0 :: Int, 127)
   , (0,alex_action_60)
   ]
 
-{-# LINE 76 "tokens.x" #-}
+{-# LINE 77 "tokens.x" #-}
 
 firstLast :: [a]->[a]
 firstLast [] = []
@@ -20269,6 +20270,9 @@ getTokens fn = unsafePerformIO (getTokensAux fn)
 getTokensAux fn = do {fh <- openFile fn ReadMode;
                       s <- hGetContents fh;
                       return (alexScanTokens s)}
+main = do
+  s <- getContents
+  print (alexScanTokens s)
 
 alex_action_2 =  \p s -> TypeInt p 
 alex_action_3 =  \p s -> TypeFloat p 
