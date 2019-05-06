@@ -9,7 +9,7 @@ idToken = tokenPrim show update_pos get_token where
     get_token _             = Nothing
  
 typeIntToken = tokenPrim show update_pos get_token where
-    get_token (TypeInt pos) = Just (TypeInt pos)
+    get_token (IntLit pos x) = Just (IntLit pos x)
     get_token _             = Nothing
 
 attribToken = tokenPrim show update_pos get_token where
@@ -24,10 +24,9 @@ update_pos pos _ []      = pos
 -- parsers nao terminais
 program :: Parsec [Token] st [Token]
 program = do 
-        a <- idToken 
         b <- stmts
         eof
-        return (a:b)
+        return (b)
 
 stmts :: Parsec [Token] st [Token]
 stmts = do
@@ -46,6 +45,7 @@ parser tokens = runParser program () "Error message" tokens
  
 main :: IO ()
 main = case parser (getTokens "1-program.ml") of
-    { Left err -> print err; 
+    { 
+        Left err -> print err; 
         Right ans -> print ans
     }
