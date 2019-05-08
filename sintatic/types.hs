@@ -2,6 +2,9 @@ module Types (parser) where
 
 import Tokens
 import Text.Parsec
+import Control.Monad.IO.Class
+
+import System.IO.Unsafe
 
 -- parser to tokens
 idToken = tokenPrim show update_pos get_token where
@@ -16,7 +19,7 @@ attribToken = tokenPrim show update_pos get_token where
     get_token (Attrib pos) = Just (Attrib pos)
     get_token _            = Nothing
  
-semiColonToken :: Parsec [Token] st Token
+semiColonToken :: ParsecT [Token] st IO (Token)
 semiColonToken = tokenPrim show update_pos get_token where
   get_token (SemiColon pos) = Just (SemiColon pos)
   get_token _         = Nothing
@@ -27,14 +30,14 @@ update_pos pos _ []      = pos
 
 
 -- parsers nao terminais
---         Parsec  input       state       output
-program :: Parsec [Token] [(Token,Token)] [Token]
+--         ParsecT  input       state       output
+program :: ParsecT [Token] [(Token,Token)] IO ([Token])
 program = do 
         a <- stmts
         eof
         return (a)
 
-stmts :: Parsec [Token] [(Token,Token)] [Token]
+stmts :: ParsecT [Token] [(Token,Token)] IO ([Token])
 stmts = try (
   do
     a <- singleStmt
@@ -46,7 +49,7 @@ stmts = try (
     return (a)
   )
 
-singleStmt :: Parsec [Token] [(Token,Token)] [Token]
+singleStmt :: ParsecT [Token] [(Token,Token)] IO ([Token])
 singleStmt = try (
   -- basic (...controle)
   do
@@ -54,7 +57,7 @@ singleStmt = try (
    return (first)
   )
 
-basicStmt :: Parsec [Token] [(Token,Token)] [Token]
+basicStmt :: ParsecT [Token] [(Token,Token)] IO ([Token])
 basicStmt = try (
   -- atribuição (...print, chamar procedimento,...)
   do
@@ -62,19 +65,41 @@ basicStmt = try (
     return first
   ) 
 
-assign :: Parsec [Token] [(Token,Token)] [Token]
+assign :: ParsecT [Token] [(Token,Token)] IO ([Token])
 assign = do
         a <- idToken
         b <- attribToken
         c <- typeIntToken 
-        colon <- semiColonToken
+        colon <- semiColonToken 
+        updateState(symtable_assign (a, c))
+        s <- getState
+        liftIO (print s)
         return (a:b:c:[colon])
 
-parser :: [Token] -> Either ParseError [Token]
-parser tokens = runParser program [] "Error message" tokens
+
+-- funções para a tabela de símbolos   
+
+--symtable_insert :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+--symtable_insert symbol []  = [symbol]
+--symtable_insert symbol symtable = symtable ++ [symbol]
+
+symtable_assign :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+symtable_assign symbol [] = [symbol]
+symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
+                               if id1 == id2 then (Id pos2 id1, v1) : t
+                               else (Id pos2 id2, v2) : symtable_assign (Id pos1 id1, v1) t   
+
+symtable_remove :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+symtable_remove _ [] = fail "variable not found"
+symtable_remove (id1, v1) ((id2, v2):t) = 
+                              if id1 == id2 then t
+                              else (id2, v2) : symtable_remove (id1, v1) t        
+
+parser :: [Token] -> IO (Either ParseError [Token])
+parser tokens = runParserT program [] "Error message" tokens
  
 main :: IO ()
-main = case parser (getTokens "1-program.ml") of
+main = case unsafePerformIO (parser (getTokens "1-program.ml")) of
     { 
         Left err -> print err; 
         Right ans -> print ans
