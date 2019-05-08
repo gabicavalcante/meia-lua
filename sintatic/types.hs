@@ -1,8 +1,8 @@
 module Types (parser) where
-import Text.Parsec
 
 import Tokens
-  
+import Text.Parsec
+
 -- parser to tokens
 idToken = tokenPrim show update_pos get_token where
     get_token (Id pos x)    = Just (Id pos x)
@@ -15,6 +15,11 @@ typeIntToken = tokenPrim show update_pos get_token where
 attribToken = tokenPrim show update_pos get_token where
     get_token (Attrib pos) = Just (Attrib pos)
     get_token _            = Nothing
+ 
+semiColonToken :: Parsec [Token] st Token
+semiColonToken = tokenPrim show update_pos get_token where
+  get_token (SemiColon pos) = Just (SemiColon pos)
+  get_token _         = Nothing
 
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos 
@@ -22,26 +27,51 @@ update_pos pos _ []      = pos
 
 
 -- parsers nao terminais
-program :: Parsec [Token] st [Token]
+--         Parsec  input       state       output
+program :: Parsec [Token] [(Token,Token)] [Token]
 program = do 
-        b <- stmts
+        a <- stmts
         eof
-        return (b)
+        return (a)
 
-stmts :: Parsec [Token] st [Token]
-stmts = do
-        first <- assign
-        return (first)
+stmts :: Parsec [Token] [(Token,Token)] [Token]
+stmts = try (
+  do
+    a <- singleStmt
+    b <- stmts
+    return (a ++ b)
+  ) <|> try (
+  do
+    a <- singleStmt
+    return (a)
+  )
 
-assign :: Parsec [Token] st [Token]
+singleStmt :: Parsec [Token] [(Token,Token)] [Token]
+singleStmt = try (
+  -- basic (...controle)
+  do
+   first <- basicStmt
+   return (first)
+  )
+
+basicStmt :: Parsec [Token] [(Token,Token)] [Token]
+basicStmt = try (
+  -- atribuição (...print, chamar procedimento,...)
+  do
+    first <- assign
+    return first
+  ) 
+
+assign :: Parsec [Token] [(Token,Token)] [Token]
 assign = do
         a <- idToken
         b <- attribToken
-        c <- typeIntToken
-        return (a:b:[c])
+        c <- typeIntToken 
+        colon <- semiColonToken
+        return (a:b:c:[colon])
 
 parser :: [Token] -> Either ParseError [Token]
-parser tokens = runParser program () "Error message" tokens
+parser tokens = runParser program [] "Error message" tokens
  
 main :: IO ()
 main = case parser (getTokens "1-program.ml") of
