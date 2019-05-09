@@ -93,11 +93,11 @@ memory_assign (id1 type1 value1 scope1) ((id2 type2 value2 scope2):t) =
                                if id1 == id2 && scope1 == scope2 then (id2 type2 value1 scope2) : t
                                else (id2 type2 value2 scope2) : memory_assign id1 type1 value1 scope1 t   
 
-symtable_remove :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
-symtable_remove _ [] = fail "variable not found"
-symtable_remove (id1, v1) ((id2, v2):t) = 
-                              if id1 == id2 then t
-                              else (id2, v2) : symtable_remove (id1, v1) t        
+memory_remove :: Variable -> Memory] -> Memory
+memory_remove _ [] = fail "variable not found"
+memory_remove (id1 type1 value1 scope1) ((id2 type2 value2 scope2):t) = 
+                              if id1 == id2 && scope1 == scope2 then t
+                              else (id2 type2 value2 scope2) : symtable_remove (id1 type1 value1 scope1) t        
 
 parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program [] "Error message" tokens
