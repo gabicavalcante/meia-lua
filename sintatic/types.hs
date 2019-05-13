@@ -1,20 +1,54 @@
 module Types (parser) where
 
-import Tokens
+import Tokens 
 import Text.Parsec
 import Control.Monad.IO.Class
 
 import System.IO.Unsafe
 
+-- paerser to types
+typeIntToken :: ParsecT [Token] st IO (Token)
+typeIntToken = tokenPrim show update_pos get_token where
+    get_token (TypeInt pos) = Just (TypeInt pos)
+    get_token _             = Nothing
+
+typeFloatToken :: ParsecT [Token] st IO (Token)
+typeFloatToken = tokenPrim show update_pos get_token where
+    get_token (TypeFloat pos)   = Just (TypeFloat pos)
+    get_token _                 = Nothing
+
+typeStringToken :: ParsecT [Token] st IO (Token)
+typeStringToken = tokenPrim show update_pos get_token where
+    get_token (TypeString pos)    = Just (TypeString pos)
+    get_token _                   = Nothing
+
+typeBooleanToken :: ParsecT [Token] st IO (Token)
+typeBooleanToken = tokenPrim show update_pos get_token where
+    get_token (TypeBoolean pos) = Just (TypeBoolean pos)
+    get_token _                 = Nothing
+
 -- parser to tokens
+idToken :: ParsecT [Token] st IO (Token)
 idToken = tokenPrim show update_pos get_token where
     get_token (Id pos x)    = Just (Id pos x)
     get_token _             = Nothing
  
-typeIntToken = tokenPrim show update_pos get_token where
+intToken :: ParsecT [Token] st IO (Token)
+intToken = tokenPrim show update_pos get_token where
     get_token (IntLit pos x) = Just (IntLit pos x)
     get_token _             = Nothing
 
+floatLitToken :: ParsecT [Token] st IO (Token)
+floatLitToken = tokenPrim show update_pos get_token where
+  get_token (FloatLit pos x)    = Just (FloatLit pos x)
+  get_token _                 = Nothing
+
+strLitToken :: ParsecT [Token] st IO (Token)
+strLitToken = tokenPrim show update_pos get_token where
+  get_token (StrLit pos x) = Just (StrLit pos x)
+  get_token _              = Nothing
+
+attribToken :: ParsecT [Token] st IO (Token)
 attribToken = tokenPrim show update_pos get_token where
     get_token (Attrib pos) = Just (Attrib pos)
     get_token _            = Nothing
@@ -66,22 +100,40 @@ basicStmt = try (
   ) 
 
 assign :: ParsecT [Token] [(Token,Token)] IO ([Token])
-assign = do
-        a <- idToken
-        b <- attribToken
-        c <- typeIntToken 
-        colon <- semiColonToken 
-        updateState(symtable_assign (a, c))
-        s <- getState
-        liftIO (print s)
-        return (a:b:c:[colon])
+assign = try (
+    do
+      a <- idToken
+      b <- attribToken
+      c <- intToken
+      colon <- semiColonToken 
+      updateState(symtable_assign (a, c))
+      s <- getState
+      liftIO (print s)
+      return (a:b:c:[colon])
+  ) <|> try (
+    do
+      a <- idToken
+      b <- attribToken
+      c <- floatLitToken
+      colon <- semiColonToken 
+      updateState(symtable_assign (a, c))
+      s <- getState
+      liftIO (print s)
+      return (a:b:c:[colon])
+  ) <|> try (
+    do
+      a <- idToken
+      b <- attribToken
+      c <- strLitToken
+      colon <- semiColonToken 
+      updateState(symtable_assign (a, c))
+      s <- getState
+      liftIO (print s)
+      return (a:b:c:[colon])
+  )
 
 
 -- funções para a tabela de símbolos   
-
---symtable_insert :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
---symtable_insert symbol []  = [symbol]
---symtable_insert symbol symtable = symtable ++ [symbol]
 
 symtable_assign :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
 symtable_assign symbol [] = [symbol]
@@ -91,13 +143,13 @@ symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) =
 
 symtable_remove :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
 symtable_remove _ [] = fail "variable not found"
-symtable_remove (id1, v1) ((id2, v2):t) = 
+symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
                               if id1 == id2 then t
-                              else (id2, v2) : symtable_remove (id1, v1) t        
+                              else (Id pos2 id2, v2) : symtable_remove (Id pos1 id1, v1) t        
 
 parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program [] "Error message" tokens
- 
+
 main :: IO ()
 main = case unsafePerformIO (parser (getTokens "1-program.ml")) of
     { 
