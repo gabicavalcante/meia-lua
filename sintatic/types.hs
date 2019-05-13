@@ -122,14 +122,14 @@ assign = try (
       return (a:b:c:[colon])
   ) <|> try (
     do
-      a <- idToken
+      Id apos aid <- idToken
       b <- attribToken
       c <- strLitToken
       colon <- semiColonToken 
-      updateState(symtable_assign (a, c))
+      updateState(symtable_assign (Id apos aid, c))
       s <- getState
       liftIO (print s)
-      return (a:b:c:[colon])
+      return (Id apos aid:b:c:[colon])
   )
 
 
