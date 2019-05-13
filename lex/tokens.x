@@ -22,7 +22,7 @@ tokens :-
   $digit+\.$digit+                            { \p s -> FloatLit p (read s) }
   $digit+                                     { \p s -> IntLit p (read s) }
   \:                                          { \p s -> Colon p }
-  \;                                          { \p s -> Semicolon p }
+  \;                                          { \p s -> SemiColon p }
   \,                                          { \p s -> Comma p }
   \.                                          { \p s -> EndPoint p }
   \=\=                                        { \p s -> SymEq p }
@@ -97,7 +97,7 @@ data Token =
   OpenScope AlexPosn              |
   CloseScope AlexPosn             |
   Colon AlexPosn                  |
-  Semicolon AlexPosn              |
+  SemiColon AlexPosn              |
   Comma AlexPosn                  |
   EndPoint AlexPosn               |
   SymPtrOp AlexPosn               |

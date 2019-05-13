@@ -2,13 +2,10 @@ module Types (parser) where
     
 import Tokens
 import Text.Parsec
-<<<<<<< Updated upstream
 import Control.Monad.IO.Class
 
 import System.IO.Unsafe
-=======
 import Memory
->>>>>>> Stashed changes
 
 -- parser to tokens
 idToken = tokenPrim show update_pos get_token where
@@ -75,7 +72,7 @@ assign = do
         b <- attribToken
         c <- typeIntToken 
         colon <- semiColonToken 
-        updateState(symtable_assign (a, c))
+        updateState(memory_assign (a,c, ))
         s <- getState
         liftIO (print s)
         return (a:b:c:[colon])
@@ -89,26 +86,20 @@ assign = do
 
 memory_assign :: String -> Type -> Value -> Scope -> Memory -> Memory
 memory_assign id1 type1 value1 scope1 [] = Variable id1 type1 value1 scope1 : []
-memory_assign (id1 type1 value1 scope1) ((id2 type2 value2 scope2):t) = 
+memory_assign id1 type1 value1 scope1 ((Variable id2 type2 value2 scope2):t) = 
                                if id1 == id2 && scope1 == scope2 then (id2 type2 value1 scope2) : t
                                else (id2 type2 value2 scope2) : memory_assign id1 type1 value1 scope1 t   
 
-memory_remove :: Variable -> Memory] -> Memory
+memory_remove :: Variable -> Memory -> Memory
 memory_remove _ [] = fail "variable not found"
-memory_remove (id1 type1 value1 scope1) ((id2 type2 value2 scope2):t) = 
+memory_remove (Variable id1 type1 value1 scope1) ((Variable id2 type2 value2 scope2):t) = 
                               if id1 == id2 && scope1 == scope2 then t
-                              else (id2 type2 value2 scope2) : symtable_remove (id1 type1 value1 scope1) t        
+                              else (id2 type2 value2 scope2) : memory_remove (id1 type1 value1 scope1) t        
 
 parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program [] "Error message" tokens
- 
-parser :: [Token] -> Either ParseError [Token]
-parser tokens = runParser program [] "Error message" tokens
 
 -- funções para a tabela de símbolos
-
-get_default_value :: Token -> Token
-get_default_value (Type "int") = Int 0
                 
 main :: IO ()
 main = case unsafePerformIO (parser (getTokens "1-program.ml")) of
