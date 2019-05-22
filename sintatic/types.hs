@@ -1,10 +1,11 @@
 module Types (parser) where
-
-import Tokens 
+    
+import Tokens
 import Text.Parsec
 import Control.Monad.IO.Class
 
 import System.IO.Unsafe
+import Memory
 
 -- paerser to types
 typeIntToken :: ParsecT [Token] st IO (Token)
@@ -106,7 +107,7 @@ assign = try (
       b <- attribToken
       c <- intToken
       colon <- semiColonToken 
-      updateState(symtable_assign (a, c))
+      updateState(memory_assign (Variable(a, c)))
       s <- getState
       liftIO (print s)
       return (a:b:c:[colon])
@@ -116,40 +117,63 @@ assign = try (
       b <- attribToken
       c <- floatLitToken
       colon <- semiColonToken 
-      updateState(symtable_assign (a, c))
-      s <- getState
-      liftIO (print s)
+      --updateState(memory_assign Variable(a, c))
+      --s <- getState
+      --liftIO (print s)
       return (a:b:c:[colon])
   ) <|> try (
     do
-      Id apos aid <- idToken
+      a <- idToken
       b <- attribToken
       c <- strLitToken
       colon <- semiColonToken 
-      updateState(symtable_assign (Id apos aid, c))
-      s <- getState
-      liftIO (print s)
-      return (Id apos aid:b:c:[colon])
+      --updateState(memory_assign Variable(a, c))
+      --s <- getState
+      --liftIO (print s)
+      return (a:b:c:[colon])
   )
 
 
 -- funções para a tabela de símbolos   
 
-symtable_assign :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
-symtable_assign symbol [] = [symbol]
-symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
-                               if id1 == id2 then (Id pos2 id1, v1) : t
-                               else (Id pos2 id2, v2) : symtable_assign (Id pos1 id1, v1) t   
+--symtable_assign :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+--symtable_assign symbol [] = [symbol]
+--symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
+--                               if id1 == id2 then (Id pos2 id1, v1) : t
+--                               else (Id pos2 id2, v2) : symtable_assign (Id pos1 id1, v1) t         
 
-symtable_remove :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
-symtable_remove _ [] = fail "variable not found"
-symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
-                              if id1 == id2 then t
-                              else (Id pos2 id2, v2) : symtable_remove (Id pos1 id1, v1) t        
+--memory_assign :: Token -> Type -> Value -> Scope -> Memory -> Memory
+--memory_assign (id1 type1 value1 scope1) [] = Variable id1 type1 value1 scope1 : []
+--memory_assign id1 type1 value1 scope1 ((Variable id2 type2 value2 scope2):t) = 
+--                               if id1 == id2 && scope1 == scope2 then (id2 type2 value1 scope2) : t
+--                               else (id2 type2 value2 scope2) : memory_assign id1 type1 value1 scope1 t   
+
+memory_assign :: Variable -> Memory -> Memory
+memory_assign symbol (Memory []) = Memory [symbol]
+memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)):t)) = 
+                              if id1 == id2 then Memory((Variable(Id pos2 id1, v1)) : t)
+                              else Memory ((Variable (Id pos2 id2, v2)) : memory_assign (Variable (Id pos1 id1, v1)) t)
+                                                              
+
+
+
+--symtable_remove :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+--symtable_remove _ [] = fail "variable not found"
+--symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
+--                              if id1 == id2 then t
+--                              else (Id pos2 id2, v2) : symtable_remove (Id pos1 id1, v1) t   
+
+--memory_remove :: Token -> Memory -> Memory
+--memory_remove _ [] = fail "variable not found"
+--memory_remove (Variable id1 type1 value1 scope1) ((Variable id2 type2 value2 scope2):t) = 
+--                              if id1 == id2 && scope1 == scope2 then t
+--                              else (id2 type2 value2 scope2) : memory_remove (id1 type1 value1 scope1) t        
 
 parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program [] "Error message" tokens
 
+-- funções para a tabela de símbolos
+                
 main :: IO ()
 main = case unsafePerformIO (parser (getTokens "1-program.ml")) of
     { 
