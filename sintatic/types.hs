@@ -152,7 +152,7 @@ memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory []) = Memory [symbol]
 memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)):t)) = 
                               if id1 == id2 then Memory((Variable(Id pos2 id1, v1)) : t)
-                              else Memory ((Variable (Id pos2 id2, v2)) : memory_assign (Variable (Id pos1 id1, v1)) t)
+                              else Memory ((Variable (Id pos2 id2, v2)) : memory_assign (Variable (Id pos1 id1, v1)) (Memory t))
                                                               
 
 
