@@ -66,13 +66,13 @@ update_pos pos _ []      = pos
 
 -- parsers nao terminais
 --         ParsecT  input       state       output
-program :: ParsecT [Token] [(Token,Token)] IO ([Token])
+program :: ParsecT [Token] Memory IO ([Token])
 program = do 
         a <- stmts
         eof
         return (a)
 
-stmts :: ParsecT [Token] [(Token,Token)] IO ([Token])
+stmts :: ParsecT [Token] Memory IO ([Token])
 stmts = try (
   do
     a <- singleStmt
@@ -84,7 +84,7 @@ stmts = try (
     return (a)
   )
 
-singleStmt :: ParsecT [Token] [(Token,Token)] IO ([Token])
+singleStmt :: ParsecT [Token] Memory IO ([Token])
 singleStmt = try (
   -- basic (...controle)
   do
@@ -92,7 +92,7 @@ singleStmt = try (
    return (first)
   )
 
-basicStmt :: ParsecT [Token] [(Token,Token)] IO ([Token])
+basicStmt :: ParsecT [Token] Memory IO ([Token])
 basicStmt = try (
   -- atribuição (...print, chamar procedimento,...)
   do
@@ -100,7 +100,7 @@ basicStmt = try (
     return first
   ) 
 
-assign :: ParsecT [Token] [(Token,Token)] IO ([Token])
+assign :: ParsecT [Token] Memory IO ([Token])
 assign = try (
     do
       a <- idToken
@@ -117,9 +117,9 @@ assign = try (
       b <- attribToken
       c <- floatLitToken
       colon <- semiColonToken 
-      --updateState(memory_assign Variable(a, c))
-      --s <- getState
-      --liftIO (print s)
+      updateState(memory_assign (Variable(a, c)))
+      s <- getState
+      liftIO (print s)
       return (a:b:c:[colon])
   ) <|> try (
     do
@@ -127,16 +127,16 @@ assign = try (
       b <- attribToken
       c <- strLitToken
       colon <- semiColonToken 
-      --updateState(memory_assign Variable(a, c))
-      --s <- getState
-      --liftIO (print s)
+      updateState(memory_assign (Variable(a, c)))
+      s <- getState
+      liftIO (print s)
       return (a:b:c:[colon])
   )
 
 
 -- funções para a tabela de símbolos   
 
---symtable_assign :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+--symtable_assign :: (Token,Token) -> Memory -> Memory
 --symtable_assign symbol [] = [symbol]
 --symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
 --                               if id1 == id2 then (Id pos2 id1, v1) : t
@@ -150,14 +150,19 @@ assign = try (
 
 memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory []) = Memory [symbol]
-memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)):t)) = 
-                              if id1 == id2 then Memory((Variable(Id pos2 id1, v1)) : t)
-                              else Memory ((Variable (Id pos2 id2, v2)) : memory_assign (Variable (Id pos1 id1, v1)) (Memory t))
+memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t)) = 
+                              if id1 == id2 then append_memory (Variable(Id pos2 id2, v1)) (Memory t)
+                              else append_memory (Variable (Id pos2 id2, v2)) (memory_assign (Variable (Id pos1 id1, v1)) (Memory t))
                                                               
+append_memory :: Variable -> Memory -> Memory
+append_memory variable (Memory []) = Memory [variable]
+append_memory variable (Memory variables) = Memory(variable : variables)
 
+--head_memory :: 
 
+--compare_variable :: 
 
---symtable_remove :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
+--symtable_remove :: (Token,Token) -> Memory -> Memory
 --symtable_remove _ [] = fail "variable not found"
 --symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
 --                              if id1 == id2 then t
@@ -170,7 +175,7 @@ memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)):
 --                              else (id2 type2 value2 scope2) : memory_remove (id1 type1 value1 scope1) t        
 
 parser :: [Token] -> IO (Either ParseError [Token])
-parser tokens = runParserT program [] "Error message" tokens
+parser tokens = runParserT program (Memory []) "Error message" tokens
 
 -- funções para a tabela de símbolos
                 
