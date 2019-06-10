@@ -133,21 +133,6 @@ assign = try (
       return (a:b:c:[colon])
   )
 
-
--- funções para a tabela de símbolos   
-
---symtable_assign :: (Token,Token) -> Memory -> Memory
---symtable_assign symbol [] = [symbol]
---symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
---                               if id1 == id2 then (Id pos2 id1, v1) : t
---                               else (Id pos2 id2, v2) : symtable_assign (Id pos1 id1, v1) t         
-
---memory_assign :: Token -> Type -> Value -> Scope -> Memory -> Memory
---memory_assign (id1 type1 value1 scope1) [] = Variable id1 type1 value1 scope1 : []
---memory_assign id1 type1 value1 scope1 ((Variable id2 type2 value2 scope2):t) = 
---                               if id1 == id2 && scope1 == scope2 then (id2 type2 value1 scope2) : t
---                               else (id2 type2 value2 scope2) : memory_assign id1 type1 value1 scope1 t   
-
 memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory []) = Memory [symbol]
 memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t)) = 
@@ -157,22 +142,6 @@ memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) 
 append_memory :: Variable -> Memory -> Memory
 append_memory variable (Memory []) = Memory [variable]
 append_memory variable (Memory variables) = Memory(variable : variables)
-
---head_memory :: 
-
---compare_variable :: 
-
---symtable_remove :: (Token,Token) -> Memory -> Memory
---symtable_remove _ [] = fail "variable not found"
---symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
---                              if id1 == id2 then t
---                              else (Id pos2 id2, v2) : symtable_remove (Id pos1 id1, v1) t   
-
---memory_remove :: Token -> Memory -> Memory
---memory_remove _ [] = fail "variable not found"
---memory_remove (Variable id1 type1 value1 scope1) ((Variable id2 type2 value2 scope2):t) = 
---                              if id1 == id2 && scope1 == scope2 then t
---                              else (id2 type2 value2 scope2) : memory_remove (id1 type1 value1 scope1) t        
 
 parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program (Memory []) "Error message" tokens
