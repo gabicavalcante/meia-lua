@@ -2,6 +2,8 @@ module Memory where
 import Tokens
 
 -- (nome e profundidade do subbloco)
+-- F, 1
+-- Global, 0
 data Scope = Scope (String, Int) deriving (Eq, Show)
 
 data Memory = Memory [Variable] deriving (Eq, Show)
