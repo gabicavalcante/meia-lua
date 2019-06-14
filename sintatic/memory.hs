@@ -1,7 +1,8 @@
 module Memory where
 import Tokens
---  (nome e profundidade do subprograma) (nome e profundidade do subbloco)
-data Scope = Scope (String, Int) (String, Int) deriving (Eq, Show)
+
+-- (nome e profundidade do subbloco)
+data Scope = Scope (String, Int) deriving (Eq, Show)
 
 data Memory = Memory [Variable] deriving (Eq, Show)
 --                        id    tipo valor escopo
