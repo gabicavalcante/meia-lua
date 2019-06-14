@@ -1,5 +1,5 @@
 module Types (parser) where
-    
+
 import Tokens
 import Text.Parsec
 import Control.Monad.IO.Class
@@ -33,7 +33,7 @@ idToken :: ParsecT [Token] st IO (Token)
 idToken = tokenPrim show update_pos get_token where
     get_token (Id pos x)    = Just (Id pos x)
     get_token _             = Nothing
- 
+
 intToken :: ParsecT [Token] st IO (Token)
 intToken = tokenPrim show update_pos get_token where
     get_token (IntLit pos x) = Just (IntLit pos x)
@@ -53,21 +53,21 @@ attribToken :: ParsecT [Token] st IO (Token)
 attribToken = tokenPrim show update_pos get_token where
     get_token (Attrib pos) = Just (Attrib pos)
     get_token _            = Nothing
- 
+
 semiColonToken :: ParsecT [Token] st IO (Token)
 semiColonToken = tokenPrim show update_pos get_token where
   get_token (SemiColon pos) = Just (SemiColon pos)
   get_token _         = Nothing
 
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
-update_pos pos _ (tok:_) = pos 
-update_pos pos _ []      = pos 
+update_pos pos _ (tok:_) = pos
+update_pos pos _ []      = pos
 
 
 -- parsers nao terminais
 --         ParsecT  input       state       output
 program :: ParsecT [Token] Memory IO ([Token])
-program = do 
+program = do
         a <- stmts
         eof
         return (a)
@@ -98,7 +98,7 @@ basicStmt = try (
   do
     first <- assign
     return first
-  ) 
+  )
 
 assign :: ParsecT [Token] Memory IO ([Token])
 assign = try (
@@ -106,7 +106,7 @@ assign = try (
       a <- idToken
       b <- attribToken
       c <- intToken
-      colon <- semiColonToken 
+      colon <- semiColonToken
       updateState(memory_assign (Variable(a, c)))
       s <- getState
       liftIO (print s)
@@ -116,7 +116,7 @@ assign = try (
       a <- idToken
       b <- attribToken
       c <- floatLitToken
-      colon <- semiColonToken 
+      colon <- semiColonToken
       updateState(memory_assign (Variable(a, c)))
       s <- getState
       liftIO (print s)
@@ -126,7 +126,7 @@ assign = try (
       a <- idToken
       b <- attribToken
       c <- strLitToken
-      colon <- semiColonToken 
+      colon <- semiColonToken
       updateState(memory_assign (Variable(a, c)))
       s <- getState
       liftIO (print s)
@@ -134,54 +134,184 @@ assign = try (
   )
 
 
--- funções para a tabela de símbolos   
+-- funções para a tabela de símbolos
 
 --symtable_assign :: (Token,Token) -> Memory -> Memory
 --symtable_assign symbol [] = [symbol]
---symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
+--symtable_assign (Id pos1 id1, v1) ((Id pos2 id2, v2):t) =
 --                               if id1 == id2 then (Id pos2 id1, v1) : t
---                               else (Id pos2 id2, v2) : symtable_assign (Id pos1 id1, v1) t         
+--                               else (Id pos2 id2, v2) : symtable_assign (Id pos1 id1, v1) t
 
 --memory_assign :: Token -> Type -> Value -> Scope -> Memory -> Memory
 --memory_assign (id1 type1 value1 scope1) [] = Variable id1 type1 value1 scope1 : []
---memory_assign id1 type1 value1 scope1 ((Variable id2 type2 value2 scope2):t) = 
+--memory_assign id1 type1 value1 scope1 ((Variable id2 type2 value2 scope2):t) =
 --                               if id1 == id2 && scope1 == scope2 then (id2 type2 value1 scope2) : t
---                               else (id2 type2 value2 scope2) : memory_assign id1 type1 value1 scope1 t   
+--                               else (id2 type2 value2 scope2) : memory_assign id1 type1 value1 scope1 t
 
 memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory []) = Memory [symbol]
-memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t)) = 
+memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t)) =
                               if id1 == id2 then append_memory (Variable(Id pos2 id2, v1)) (Memory t)
                               else append_memory (Variable (Id pos2 id2, v2)) (memory_assign (Variable (Id pos1 id1, v1)) (Memory t))
-                                                              
+
 append_memory :: Variable -> Memory -> Memory
 append_memory variable (Memory []) = Memory [variable]
 append_memory variable (Memory variables) = Memory(variable : variables)
 
---head_memory :: 
+--head_memory ::
 
---compare_variable :: 
+--compare_variable ::
 
 --symtable_remove :: (Token,Token) -> Memory -> Memory
 --symtable_remove _ [] = fail "variable not found"
---symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) = 
+--symtable_remove (Id pos1 id1, v1) ((Id pos2 id2, v2):t) =
 --                              if id1 == id2 then t
---                              else (Id pos2 id2, v2) : symtable_remove (Id pos1 id1, v1) t   
+--                              else (Id pos2 id2, v2) : symtable_remove (Id pos1 id1, v1) t
 
 --memory_remove :: Token -> Memory -> Memory
 --memory_remove _ [] = fail "variable not found"
---memory_remove (Variable id1 type1 value1 scope1) ((Variable id2 type2 value2 scope2):t) = 
+--memory_remove (Variable id1 type1 value1 scope1) ((Variable id2 type2 value2 scope2):t) =
 --                              if id1 == id2 && scope1 == scope2 then t
---                              else (id2 type2 value2 scope2) : memory_remove (id1 type1 value1 scope1) t        
+--                              else (id2 type2 value2 scope2) : memory_remove (id1 type1 value1 scope1) t
 
 parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program (Memory []) "Error message" tokens
 
 -- funções para a tabela de símbolos
-                
+
+
+
+-- Operation Symbols
+
+symOpPlusToken :: ParsecT [Token] st IO (Token)
+symOpPlusToken = tokenPrim show update_pos get_token where
+  get_token (SymOpPlus pos) = Just (SymOpPlus pos)
+  get_token _               = Nothing
+
+symOpMinusToken :: ParsecT [Token] st IO (Token)
+symOpMinusToken = tokenPrim show update_pos get_token where
+  get_token (SymOpMinus pos) = Just (SymOpMinus pos)
+  get_token _                = Nothing
+
+symOpMultToken :: ParsecT [Token] st IO (Token)
+symOpMultToken = tokenPrim show update_pos get_token where
+  get_token (SymOpMult pos) = Just (SymOpMult pos)
+  get_token _               = Nothing
+
+symOpDivToken :: ParsecT [Token] st IO (Token)
+symOpDivToken = tokenPrim show update_pos get_token where
+  get_token (SymOpDiv pos)  = Just (SymOpDiv pos)
+  get_token _               = Nothing
+
+symOpExpToken :: ParsecT [Token] st IO (Token)
+symOpExpToken = tokenPrim show update_pos get_token where
+  get_token (SymOpExp pos)  = Just (SymOpExp pos)
+  get_token _               = Nothing
+
+-- Brackets
+
+openParenthToken :: ParsecT [Token] st IO (Token)
+openParenthToken = tokenPrim show update_pos get_token where
+  get_token (OpenParenth pos) = Just (OpenParenth pos)
+  get_token _                 = Nothing
+
+closeParenthToken :: ParsecT [Token] st IO (Token)
+closeParenthToken = tokenPrim show update_pos get_token where
+  get_token (CloseParenth pos) = Just (CloseParenth pos)
+  get_token _                  = Nothing
+
+openBracketToken :: ParsecT [Token] st IO (Token)
+openBracketToken = tokenPrim show update_pos get_token where
+  get_token (OpenBracket pos) = Just (OpenBracket pos)
+  get_token _                 = Nothing
+
+closeBracketToken :: ParsecT [Token] st IO (Token)
+closeBracketToken = tokenPrim show update_pos get_token where
+  get_token (CloseBracket pos) = Just (CloseBracket pos)
+  get_token _                  = Nothing
+
+openScopeToken :: ParsecT [Token] st IO (Token)
+openScopeToken = tokenPrim show update_pos get_token where
+  get_token (OpenScope pos) = Just (OpenScope pos)
+  get_token _               = Nothing
+
+closeScopeToken :: ParsecT [Token] st IO (Token)
+closeScopeToken = tokenPrim show update_pos get_token where
+  get_token (CloseScope pos) = Just (CloseScope pos)
+  get_token _                = Nothing
+
+
+-- Expressions
+-- &&  ||
+expr :: ParsecT [Token] Memory IO(TokenTree)
+expr = try (
+  do
+    a <- openParenthToken
+    meioParent <- expr
+    b <- closeParenthToken
+    meio <- exprOps
+    c <- expr
+    return (TriTree NonTExpr meioParent meio c)
+  ) <|> try (
+  do
+    a <- exprNot
+    meio <- exprOps
+    b <- expr
+    return (TriTree NonTExpr a meio b)
+  ) <|> try (
+  do
+    a <- exprNot
+    return a
+  )
+
+-- ! (Not)
+exprNot :: ParsecT [Token] Memory IO(TokenTree)
+exprNot = try (
+  do
+    meio <- exprNotOps
+    c <- exprNot
+    return (DualTree NonTExpr meio c)
+  ) <|> try (
+  do
+    a <- expr2
+    return a
+  )
+
+expr1Ops :: ParsecT [Token] [(Token,Token)] IO(TokenTree)
+expr1Ops =
+  (do
+    sym <- symBoolNotToken
+    return (makeToken sym)
+  )
+
+-- +-
+expreSumSub :: ParsecT [Token] Memory IO(TokenTree)
+expreSumSub = (
+  do
+    sym <- symOpPlusToken
+    return (makeToken sym)
+  ) <|> (do
+    sym <- symOpMinusToken
+    return (makeToken sym)
+  )
+
+-- * /
+expreMultDiv :: ParsecT [Token] Memory IO(TokenTree)
+expreMultDiv = (
+  do
+    sym <- symOpMultToken
+    return (makeToken sym)
+  ) <|> (do
+    sym <- symOpDivToken
+    return (makeToken sym)
+  ) <|> (do
+    sym <- symOpModToken
+    return (makeToken sym)
+  )
+
 main :: IO ()
 main = case unsafePerformIO (parser (getTokens "1-program.ml")) of
-    { 
-        Left err -> print err; 
+    {
+        Left err -> print err;
         Right ans -> print ans
     }
