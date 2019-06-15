@@ -208,51 +208,227 @@ closeScopeToken = tokenPrim show update_pos get_token where
   get_token _                = Nothing
 
 
+makeToken :: Token -> TokenTree
+makeToken tok = AtomicToken tok
+
+-- Evaluating Expressions
+--                 memory    arvoreExpr   Memory e valor encontrado
+evaluateExpr :: Memory -> ExprTree -> (Memory, (Type, Value))
+evaluateExpr memory exprTree = case tree of
+    -- atomics
+    AtomicToken a -> case a of
+        IntLit _ v -> (memory, (IntType, Int v))
+        FloatLit _ v -> (memory, (FloatType, Float v))
+        StrLit _ v -> (memory, (StringType, String v))
+        SymBoolTrue _ -> (memory, (BoolType, Bool True))
+        SymBoolFalse _ -> (memory, (BoolType, Bool False))
+    TriTree a b c -> evaluateTriTree st a b c
+
+
+evaluateTriTree :: Memory -> ExprTree -> ExprTree -> ExprTree -> (Memory, (Type, Value))
+-- Adicao :   a + b
+evaluateTriTree memory (AtomicToken (SymOpPlus _)) a b = res
+where
+    (mem1, (type1, val1)) = evaluateExpr memory a
+    (mem2, (type2, val2)) = evaluateExpr mem1 b
+    res = (mem2, exprSum (type1, val1) (type2, val2))
+
+-- Subtracao :  a - b
+evaluateTriTree mem (AtomicToken (SymOpMinus _)) a b = res
+    where
+        (mem1, (type1, val1)) = evaluateExpr mem a
+        (mem2, (type2, val2)) = evaluateExpr mem1 b
+        res = (mem2, exprMinus (type1, val1) (type2, val2))
+
+-- Multiplicacao : a * b
+evaluateTriTree mem (AtomicToken (SymOpMult _)) a b = res
+    where
+        (mem1, (type1, val1)) = evaluateExpr mem a
+        (mem2, (type2, val2)) = evaluateExpr mem1 b
+        res = (mem2, exprMult (type1, val1) (type2, val2))
+
+-- Divisao : a / b
+evaluateTriTree mem (AtomicToken (SymOpDiv _)) a b = res
+    where
+        (mem1, (type1, val1)) = evaluateExpr mem a
+        (mem2, (type2, val2)) = evaluateExpr mem1 b
+        res = (mem2, exprDiv (type1, val1) (type2, val2))
+
+-- Exponenciacao : a ^ b
+triTreeExprParser mem (LeafToken (SymOpExp _)) a b = res
+where
+    (mem1, (type1, val1)) = evaluateExpr mem a
+    (mem2, (type2, val2)) = evaluateExpr mem1 b
+    res = (mem2, exprExp (type1, val1) (type2, val2))
+
+
+exprSum :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprSum (IntType, Int a) (IntType, Int b) = (IntType, Int (a + b))
+exprSum (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a + b))
+exprSum (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a + b ))
+exprSum (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a + intToFloat b ))
+exprSum (StringType, String a) (StringType, String b) = (StringType, String (a ++ b))
+exprSum a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprMinus :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprMinus (IntType, Int a) (IntType, Int b) = (IntType, Int (a - b))
+exprMinus (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a - b))
+exprMinus (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a - b ))
+exprMinus (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a - intToFloat b ))
+exprMinus a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprMult :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprMult (IntType, Int a) (IntType, Int b) = (IntType, Int (a * b))
+exprMult (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a * b))
+exprMult (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a * b ))
+exprMult (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a * intToFloat b ))
+exprMult a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprDiv :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprDiv (IntType, Int a) (IntType, Int b) = (IntType, Int (a `div` b))
+exprDiv (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a / b))
+exprDiv (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a / b ))
+exprDiv (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a / intToFloat b ))
+exprDiv a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprMod :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprMod (IntType, Int a) (IntType, Int b) = (IntType, Int (a `rem` b))
+exprMod a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprExp :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprExp (IntType, Int a) (IntType, Int b) = (IntType, Int (a ^ b))
+exprExp (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a ** b))
+exprExp (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a ** b ))
+exprExp (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a ** intToFloat b ))
+exprExp a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprAtomic :: Expression -> Value
+  exprFinalIds = try (
+    -- StringAtomic
+    do
+      a <- strLitToken
+      return (Value a)
+    ) <|> try (
+    -- FloatAtomic
+    do
+      a <- floatLitToken
+      return (Value a)
+    ) <|> try (
+    -- IntAtomic
+    do
+      a <- intLitToken
+      return (Value a)
+    )
+
 -- Expressions
--- &&  ||
-expr :: ParsecT [Token] Memory IO(TokenTree)
-expr = try (
+-- Nv1 : + e -
+-- Nv2 : * e /
+-- Nv3 : ^
+-- Nv4 : Parenteshis ( )
+
+  exprNv1 :: ParsecT [Token] Memory IO(ExprTree)
+  exprNv1 = try (
+    do
+      a <- openParenthToken
+      meioParent <- exprNv1
+      b <- closeParenthToken
+      operator <- OperatorNv1
+      c <- exprNv1
+      return (TriTree Memory meioParent operator c)
+    ) <|> try (
+      do
+        a <- exprNv2
+        operator <- OperatorNv1
+        b <- exprNv1
+        return (TriTree NonTExpr a operator b)
+    ) <|> (
+      do
+        a <- exprNv2
+        return a
+    )
+
+  OperatorNv1 :: ParsecT [Token] Memory IO(TokenTree)
+  OperatorNv1 = (
+    do
+      sym <- symOpPlusToken
+      return (makeToken sym)
+    ) <|> (do
+      sym <- symOpMinusToken
+      return (makeToken sym)
+    )
+
+  exprNv2 :: ParsecT [Token] Memory IO(ExprTree)
+  exprNv2 = try (
+    do
+      a <- openParenthToken
+      meioParent <- exprNv1
+      b <- closeParenthToken
+      operator <- OperatorNv2
+      c <- exprNv2
+      return (TriTree Memory meioParent operator c)
+    ) <|> try (
+      do
+        a <- exprNv3
+        operator <- OperatorNv2
+        b <- exprNv2
+        return (TriTree NonTExpr a operator b)
+    ) <|> (
+      do
+        a <- exprNv3
+        return a
+    )
+
+  OperatorNv2 :: ParsecT [Token] Memory IO(TokenTree)
+  OperatorNv2 = (
+    do
+      sym <- symOpPlusToken
+      return (makeToken sym)
+    ) <|> (do
+      sym <- symOpDivToken
+      return (makeToken sym)
+    )
+
+  exprNv3 :: ParsecT [Token] Memory IO(ExprTree)
+  exprNv3 = try (
+    do
+      a <- openParenthToken
+      meioParent <- exprNv1
+      b <- closeParenthToken
+      operator <- OperatorNv3
+      c <- exprNv3
+      return (TriTree Memory meioParent operator c)
+    ) <|> try (
+      do
+        a <- exprNv4
+        operator <- OperatorNv3
+        b <- exprNv3
+        return (TriTree NonTExpr a operator b)
+    ) <|> (
+      do
+        a <- exprNv4
+        return a
+    )
+
+  OperatorNv3 :: ParsecT [Token] Memory IO(TokenTree)
+  OperatorNv3 = (
+    do
+      sym <- symOpExpToken
+      return (makeToken sym)
+    )
+
+
+  exprNv4 :: ParsecT [Token] Memory IO(TokenTree)
+  exprNv4 = try (
+  -- ( )
   do
     a <- openParenthToken
-    meioParent <- expr
+    meio <- exprNv1
     b <- closeParenthToken
-    meio <- exprOps
-    c <- expr
-    return (TriTree NonTExpr meioParent meio c)
-  ) <|> try (
-  do
-    a <- exprNot
-    meio <- exprOps
-    b <- expr
-    return (TriTree NonTExpr a meio b)
-  ) <|> try (
-  do
-    a <- exprNot
-    return a
-  )
-
--- ! (Not)
-exprNot :: ParsecT [Token] Memory IO(TokenTree)
-exprNot = try (
-  do
-    meio <- exprNotOps
-    c <- exprNot
-    return (DualTree NonTExpr meio c)
-  ) <|> try (
-  do
-    a <- expr2
-    return a
-  )
-
-expr1Ops :: ParsecT [Token] [(Token,Token)] IO(TokenTree)
-expr1Ops =
-  (do
-    sym <- symBoolNotToken
-    return (makeToken sym)
+    return meio
   )
 
 -- +-
-expreSumSub :: ParsecT [Token] Memory IO(TokenTree)
+expreSumSub :: ParsecT [Token] Memory IO(ExprTree)
 expreSumSub = (
   do
     sym <- symOpPlusToken
@@ -263,7 +439,7 @@ expreSumSub = (
   )
 
 -- * /
-expreMultDiv :: ParsecT [Token] Memory IO(TokenTree)
+expreMultDiv :: ParsecT [Token] Memory IO(ExprTree)
 expreMultDiv = (
   do
     sym <- symOpMultToken

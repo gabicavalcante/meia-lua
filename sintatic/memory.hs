@@ -21,3 +21,6 @@ data Value = Int Int |
     Float Float |
     String String |
     Bool Bool deriving (Eq, Show)
+
+data ExprTree = TriTree TokenTree TokenTree TokenTree |
+                AtomicToken Token deriving (Eq, Show)
