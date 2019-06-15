@@ -225,7 +225,7 @@ makeToken tok = AtomicToken tok
 -- Evaluating Expressions
 --                 memory    arvoreExpr   Memory e valor encontrado
 evaluateExpr :: Memory -> ExprTree -> (Memory, (Type, Value))
-evaluateExpr memory exprTree = case tree of
+evaluateExpr memory exprTree = case exprTree of
     -- atomics
     AtomicToken a -> case a of
         IntLit _ v -> (memory, (IntType, Int v))
@@ -233,7 +233,7 @@ evaluateExpr memory exprTree = case tree of
         StrLit _ v -> (memory, (StringType, String v))
         SymTrue _ -> (memory, (BoolType, Bool True))
         SymFalse _ -> (memory, (BoolType, Bool False))
-    TriTree a b c -> evaluateTriTree st a b c
+    TriTree a b c -> evaluateTriTree memory a b c
 
 
 evaluateTriTree :: Memory -> ExprTree -> ExprTree -> ExprTree -> (Memory, (Type, Value))
@@ -272,6 +272,9 @@ triTreeExprParser mem (AtomicToken (SymOpExp _)) a b = res
         (mem2, (type2, val2)) = evaluateExpr mem1 b
         res = (mem2, exprExp (type1, val1) (type2, val2))
 
+
+intToFloat :: Int -> Float
+intToFloat a = fromInteger (toInteger a)
 
 exprSum :: (Type, Value) -> (Type, Value) -> (Type, Value)
 exprSum (IntType, Int a) (IntType, Int b) = (IntType, Int (a + b))
@@ -327,7 +330,7 @@ exprAtomic = try (
   ) <|> try (
   -- IntAtomic
   do
-    a <- intLitToken
+    a <- intToken
     return (Value a)
   )
 
@@ -351,7 +354,7 @@ exprNv1 = try (
       a <- exprNv2
       operator <- operatorNv1
       b <- exprNv1
-      return (TriTree NonTExpr a operator b)
+      return (TriTree Memory a operator b)
   ) <|> (
     do
       a <- exprNv2
@@ -382,7 +385,7 @@ exprNv2 = try (
       a <- exprNv3
       operator <- operatorNv2
       b <- exprNv2
-      return (TriTree NonTExpr a operator b)
+      return (TriTree Memory a operator b)
   ) <|> (
     do
       a <- exprNv3
@@ -413,7 +416,7 @@ exprNv3 = try (
       a <- exprNv4
       operator <- operatorNv3
       b <- exprNv3
-      return (TriTree NonTExpr a operator b)
+      return (TriTree Memory a operator b)
   ) <|> (
     do
       a <- exprNv4
@@ -436,31 +439,6 @@ exprNv4 = try (
     meio <- exprNv1
     b <- closeParenthToken
     return meio
-  )
-
--- +-
-expreSumSub :: ParsecT [Token] Memory IO(ExprTree)
-expreSumSub = (
-  do
-    sym <- symOpPlusToken
-    return (makeToken sym)
-  ) <|> (do
-    sym <- symOpMinusToken
-    return (makeToken sym)
-  )
-
--- * /
-expreMultDiv :: ParsecT [Token] Memory IO(ExprTree)
-expreMultDiv = (
-  do
-    sym <- symOpMultToken
-    return (makeToken sym)
-  ) <|> (do
-    sym <- symOpDivToken
-    return (makeToken sym)
-  ) <|> (do
-    sym <- symOpModToken
-    return (makeToken sym)
   )
 
 main :: IO ()

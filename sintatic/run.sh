@@ -1,1 +1,1 @@
-runhaskell -i/Users/gabriela/Student/LPCP/meia-lua/lex types.hs
+runhaskell -i/Users/giovannirosario/git/meia-lua/lex types.hs
