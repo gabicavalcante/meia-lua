@@ -1,1 +1,1 @@
-runhaskell -i/Users/gabriela/Student/LPCP/meia-lua/lex types.hs
+runhaskell -i/.../meia-lua/lex ParserTokensNTerminal.hs
