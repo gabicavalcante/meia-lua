@@ -1,10 +1,20 @@
 import Tokens
-import Expression 
+import Expression
 import Memory
 import ParserTokensNTerminal
 
 import System.IO.Unsafe
 import System.Environment
+
+--memory_assign :: Variable -> Memory -> Memory
+--memory_assign symbol (Memory []) = Memory [symbol]
+--memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t)) =
+--                              if id1 == id2 then append_memory (Variable(Id pos2 id2, v1)) (Memory t)
+--                              else append_memory (Variable (Id pos2 id2, v2)) (memory_assign (Variable (Id pos1 id1, v1)) (Memory t))
+
+--append_memory :: Variable -> Memory -> Memory
+--append_memory variable (Memory []) = Memory [variable]
+--append_memory variable (Memory variables) = Memory(variable : variables)
 
 
 evaluateExpr :: Memory -> ExprTree -> (Memory, (Type, Value))
@@ -18,9 +28,9 @@ evaluateExpr memory exprTree = case exprTree of
         SymFalse _ -> (memory, (BoolType, Bool False))
 
 assignToId :: Memory -> ExprTree -> ExprTree -> Memory
-assignToId st id expr =  (st1, exprRes)
+assignToId st id expr = (st1, exprRes)
     where
-        (st1, exprRes) = evaluateExpr st expr 
+        (st1, exprRes) = evaluateExpr st expr
 
 
 inicAnalisadorSemantico :: ExprTree -> IO()
@@ -28,7 +38,7 @@ inicAnalisadorSemantico tree = analisadorSemantico tree Memory[]
 
 analisadorSemantico :: ExprTree -> Memory -> Memory
 -- assign
-analisadorSemantico (DoubleNode a c) st = assignToId st a c 
+analisadorSemantico (DoubleNode a c) st = assignToId st a c
 
 getInput :: String
 getInput = unsafePerformIO (getLine)
@@ -47,8 +57,9 @@ getInputOfType _ = error "Operação de scan não permitida para esse tipo"
 
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "problem1.ml")) of
-    { 
-        Left err -> print err; 
+main = do
+    case unsafePerformIO (parser (getTokens "problem1.ml")) of
+    {
+        Left err -> print err;
         Right ans -> inicAnalisadorSemantico ans
     }
