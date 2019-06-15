@@ -223,7 +223,7 @@ makeToken :: Token -> ExprTree
 makeToken tok = AtomicToken tok
 
 -- Evaluating Expressions
---                 memory    arvoreExpr   Memory e valor encontrado
+--              memory    arvoreExpr   Memory e valor encontrado
 evaluateExpr :: Memory -> ExprTree -> (Memory, (Type, Value))
 evaluateExpr memory exprTree = case exprTree of
     -- atomics
@@ -316,22 +316,22 @@ exprExp (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a
 exprExp (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a ** intToFloat b ))
 exprExp a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
 
-exprAtomic :: ExprTree -> Value
+exprAtomic :: ParsecT [Token] Memory IO(ExprTree) ---ExprTree -> AtomicToken
 exprAtomic = try (
   -- StringAtomic
   do
     a <- strLitToken
-    return (Value a)
+    return (AtomicToken a)
   ) <|> try (
   -- FloatAtomic
   do
     a <- floatLitToken
-    return (Value a)
+    return (AtomicToken a)
   ) <|> try (
   -- IntAtomic
   do
     a <- intToken
-    return (Value a)
+    return (AtomicToken a)
   )
 
 -- Expressions
@@ -348,13 +348,13 @@ exprNv1 = try (
     b <- closeParenthToken
     operator <- operatorNv1
     c <- exprNv1
-    return (TriTree Memory meioParent operator c)
+    return (TriTree meioParent operator c)
   ) <|> try (
     do
       a <- exprNv2
       operator <- operatorNv1
       b <- exprNv1
-      return (TriTree Memory a operator b)
+      return (TriTree a operator b)
   ) <|> (
     do
       a <- exprNv2
@@ -379,13 +379,13 @@ exprNv2 = try (
     b <- closeParenthToken
     operator <- operatorNv2
     c <- exprNv2
-    return (TriTree Memory meioParent operator c)
+    return (TriTree meioParent operator c)
   ) <|> try (
     do
       a <- exprNv3
       operator <- operatorNv2
       b <- exprNv2
-      return (TriTree Memory a operator b)
+      return (TriTree a operator b)
   ) <|> (
     do
       a <- exprNv3
@@ -410,13 +410,13 @@ exprNv3 = try (
     b <- closeParenthToken
     operator <- operatorNv3
     c <- exprNv3
-    return (TriTree Memory meioParent operator c)
+    return (TriTree meioParent operator c)
   ) <|> try (
     do
       a <- exprNv4
       operator <- operatorNv3
       b <- exprNv3
-      return (TriTree Memory a operator b)
+      return (TriTree a operator b)
   ) <|> (
     do
       a <- exprNv4
