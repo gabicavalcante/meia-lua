@@ -3,3 +3,5 @@
 /lex/tokens.hi
 /lex/tokens.hs
 /lex/tokens.o
+
+/sintatic/run.sh
