@@ -13,29 +13,21 @@ import Memory
 --         ParsecT  input  state       output
 program :: ParsecT [Token] Memory IO (ExprTree)
 program = do
-        a <- stmts
+        a <- stmts  
         eof
         return (UniTree a)
 
 stmts :: ParsecT [Token] Memory IO (ExprTree)
 stmts = try (
     do
-        a <- singleStmt
+        a <- basicStmt
         b <- stmts
         return (DualTree a b)
     ) <|> try (
     do
-        a <- singleStmt
+        a <- basicStmt
         return (UniTree a)
-    )
-
-singleStmt :: ParsecT [Token] Memory IO (ExprTree)
-singleStmt = try (
-    -- basic (...controle)
-    do
-        first <- basicStmt
-        return (first)
-    )
+    ) 
 
 basicStmt :: ParsecT [Token] Memory IO (ExprTree)
 basicStmt = try (
@@ -57,7 +49,7 @@ listParam = try (
     a <- exprNv1
     b <- commaToken
     c <- listParam
-    return (DualTree a c) -- ?
+    return (DualTree a c) 
   ) <|> (
   -- param
   do 
@@ -69,11 +61,11 @@ assign :: ParsecT [Token] Memory IO(ExprTree)
 assign = do
         a <- idToken
         b <- attribToken
-        c <- rightHandAssign
+        c <- rightAssign
         return (DualTree (makeToken a) c)
 
-rightHandAssign :: ParsecT [Token] Memory IO(ExprTree)
-rightHandAssign = try (
+rightAssign :: ParsecT [Token] Memory IO(ExprTree)
+rightAssign = try (
     do
         a <- exprNv1
         return a
