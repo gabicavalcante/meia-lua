@@ -62,6 +62,7 @@ assign = do
         a <- idToken
         b <- attribToken
         c <- rightAssign
+        colon <- semiColonToken
         return (DualTree (makeToken a) c)
 
 rightAssign :: ParsecT [Token] Memory IO(ExprTree)
@@ -71,7 +72,7 @@ rightAssign = try (
         return a
     ) <|> try (
     do 
-        b <- scanType
+        b <- exprAtomic
         return (UniTree b)
     )
 
