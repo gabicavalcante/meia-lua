@@ -35,6 +35,7 @@ basicStmt = try (
     do 
         first <- printToken
         things <- listParam
+        colon <- semiColonToken
         return (UniTree things)
     ) <|> try ( 
     do
@@ -175,7 +176,7 @@ exprNv2 = try (
 operatorNv2 :: ParsecT [Token] Memory IO(ExprTree)
 operatorNv2 = (
     do
-        sym <- symOpPlusToken
+        sym <- symOpMultToken
         return (makeToken sym)
     ) <|> (do
         sym <- symOpDivToken
@@ -210,7 +211,7 @@ operatorNv3 = (
         return (makeToken sym)
     )
 
-
+-- ( )
 exprNv4 :: ParsecT [Token] Memory IO(ExprTree)
 exprNv4 = try (
 -- ( )
@@ -219,7 +220,15 @@ exprNv4 = try (
         meio <- exprNv1
         b <- closeParenthToken
         return meio
-    )
+    ) <|> try  (
+    do
+        a <- exprAtomic
+        return a
+    ) <|> try  (
+    do
+        a <- idToken
+        return (makeToken a)
+    ) 
 
 memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory []) = Memory [symbol]
@@ -330,7 +339,7 @@ parser :: [Token] -> IO (Either ParseError ExprTree)
 parser tokens = runParserT program (Memory []) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "1-program.ml")) of
+main = case unsafePerformIO (parser (getTokens "problem1.ml")) of
     {
         Left err -> print err;
         Right ans -> print ans
