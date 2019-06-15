@@ -46,8 +46,8 @@ idToken = tokenPrim show update_pos get_token where
     get_token (Id pos x)    = Just (Id pos x)
     get_token _             = Nothing
 
-intToken :: ParsecT [Token] st IO (Token)
-intToken = tokenPrim show update_pos get_token where
+intLitToken :: ParsecT [Token] st IO (Token)
+intLitToken = tokenPrim show update_pos get_token where
     get_token (IntLit pos x) = Just (IntLit pos x)
     get_token _             = Nothing
 

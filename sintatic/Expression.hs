@@ -2,8 +2,8 @@ module Expression where
 
 import Tokens
 
-data ExprTree = TriTree ExprTree ExprTree ExprTree |
-                DualTree ExprTree ExprTree |
-                UniTree ExprTree |
+data ExprTree = TripleNode ExprTree ExprTree ExprTree |
+                DoubleNode ExprTree ExprTree |
+                SingleNode ExprTree |
                 None |
                 AtomicToken Token deriving (Eq, Show)
