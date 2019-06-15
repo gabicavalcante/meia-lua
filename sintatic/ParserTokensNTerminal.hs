@@ -1,4 +1,4 @@
-module TypesNTerminal (parser) where
+module ParserTokensNTerminal where
 
 import Tokens
 import Expression
