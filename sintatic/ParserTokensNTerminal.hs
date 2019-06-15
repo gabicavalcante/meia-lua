@@ -225,9 +225,9 @@ exprNv4 = try (
         a <- exprAtomic
         return a
     ) <|> try  (
-    do
-        a <- idToken
-        return (makeToken a)
+    do   
+        id <- idToken 
+        return (makeToken id)
     ) 
 
 memory_assign :: Variable -> Memory -> Memory
