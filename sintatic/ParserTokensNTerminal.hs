@@ -13,7 +13,7 @@ import Memory
 --         ParsecT  input  state       output
 program :: ParsecT [Token] Memory IO (ExprTree)
 program = do
-        a <- stmts  
+        a <- stmts
         eof
         return (UniTree a)
 
@@ -27,17 +27,17 @@ stmts = try (
     do
         a <- basicStmt
         return (UniTree a)
-    ) 
+    )
 
 basicStmt :: ParsecT [Token] Memory IO (ExprTree)
 basicStmt = try (
     -- print
-    do 
+    do
         first <- printToken
         things <- listParam
         colon <- semiColonToken
         return (UniTree things)
-    ) <|> try ( 
+    ) <|> try (
     do
         first <- assign
         return first
@@ -50,10 +50,10 @@ listParam = try (
     a <- exprNv1
     b <- commaToken
     c <- listParam
-    return (DualTree a c) 
+    return (DualTree a c)
   ) <|> (
   -- param
-  do 
+  do
     a <- exprNv1
     return (UniTree a)
   )
@@ -72,7 +72,7 @@ rightAssign = try (
         a <- exprNv1
         return a
     ) <|> try (
-    do 
+    do
         b <- exprAtomic
         return (UniTree b)
     )
@@ -95,7 +95,7 @@ scanType = try (
         a <- typeBooleanToken
         return (AtomicToken a)
     )
-    
+
 
 exprAtomic :: ParsecT [Token] Memory IO(ExprTree) ---ExprTree -> AtomicToken
 exprAtomic = try (
@@ -228,7 +228,7 @@ exprNv4 = try (
     do
         a <- idToken
         return (makeToken a)
-    ) 
+    )
 
 memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory []) = Memory [symbol]
@@ -251,6 +251,20 @@ evaluateExpr memory exprTree = case exprTree of
         StrLit _ v -> (memory, (StringType, String v))
         SymTrue _ -> (memory, (BoolType, Bool True))
         SymFalse _ -> (memory, (BoolType, Bool False))
+    --UniTree nonT a -> case nonT of
+        --NonTInvokeFunction -> startFunction st a []
+        --NonTId -> avaliarExpressaoParseId st a
+        --a -> error (show a)
+    --DualTree NonTExpr (LeafToken (SymBoolNot _)) b -> res
+    --    where
+    --        (st1, (type1, val1)) = avaliarExpressao st b
+    --        res = (st1, exprBoolNot (type1, val1))
+
+    --DualTree NonTInvokeFunctionArgs a b -> res
+    --    where
+    --        -- (State, [(Type, Value)])
+    --        (st1, args) = evalArgs st b
+    --        res = startFunction st1 a args -- modificar para funçao
     TriTree a b c -> evaluateTriTree memory a b c
 
 
