@@ -82,6 +82,7 @@ expression = try (
         return (SingleNode b)
     ) 
 
+-- una expression
 exprAtomic :: ParsecT [Token] Memory IO(ExprTree)  
 exprAtomic = try (
     -- StringAtomic
@@ -100,15 +101,16 @@ exprAtomic = try (
         return (AtomicToken a)
     )
 
+-- Nv1 : + e -
 exprNv1 :: ParsecT [Token] Memory IO(ExprTree)
 exprNv1 = try (
     do
         a <- openParenthToken
-        meioParent <- exprNv1
+        internalContent <- exprNv1
         b <- closeParenthToken
         operator <- operatorNv1
         c <- exprNv1
-        return (TripleNode meioParent operator c)
+        return (TripleNode internalContent operator c)
     ) <|> try (
     do
         a <- exprNv2
@@ -131,15 +133,16 @@ operatorNv1 = (
         return (makeToken sym)
     )
 
+-- Nv2 : * e /
 exprNv2 :: ParsecT [Token] Memory IO(ExprTree)
 exprNv2 = try (
     do
         a <- openParenthToken
-        meioParent <- exprNv1
+        internalContent <- exprNv1
         b <- closeParenthToken
         operator <- operatorNv2
         c <- exprNv2
-        return (TripleNode meioParent operator c)
+        return (TripleNode internalContent operator c)
     ) <|> try (
     do
         a <- exprNv3
@@ -162,15 +165,16 @@ operatorNv2 = (
         return (makeToken sym)
     )
 
+-- Nv3 : ^
 exprNv3 :: ParsecT [Token] Memory IO(ExprTree)
 exprNv3 = try (
     do
         a <- openParenthToken
-        meioParent <- exprNv1
+        internalContent <- exprNv1
         b <- closeParenthToken
         operator <- operatorNv3
         c <- exprNv3
-        return (TripleNode meioParent operator c)
+        return (TripleNode internalContent operator c)
     ) <|> try (
     do
         a <- exprNv4
@@ -192,8 +196,7 @@ operatorNv3 = (
 
 -- ( )
 exprNv4 :: ParsecT [Token] Memory IO(ExprTree)
-exprNv4 = try (
--- ( )
+exprNv4 = try ( 
     do
         a <- openParenthToken
         meio <- exprNv1
@@ -222,9 +225,9 @@ append_memory variable (Memory variables) = Memory(variable : variables)
 parser :: [Token] -> IO (Either ParseError ExprTree)
 parser tokens = runParserT program (Memory []) "Error message" tokens
 
-main :: IO ()
-main = case unsafePerformIO (parser (getTokens "problem1.ml")) of
-    {
-        Left err -> print err;
-        Right ans -> print ans
-    }
+--main :: IO ()
+--main = case unsafePerformIO (parser (getTokens "problem1.ml")) of
+--    {
+--        Left err -> print err;
+--        Right ans -> print ans
+--    }
