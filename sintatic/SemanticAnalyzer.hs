@@ -26,16 +26,16 @@ assignToId st id expr = st1
 emptyMemory :: Memory
 emptyMemory = (Memory [] (return()))
 
-inicAnalisadorSemantico :: ExprTree -> IO()
-inicAnalisadorSemantico tree = getFinalMemoryIO (analisadorSemantico tree emptyMemory)
+initialize :: ExprTree -> IO()
+initialize tree = getFinalMemoryIO (semanticAnalyzer tree emptyMemory)
 
 getFinalMemoryIO :: Memory -> IO()
 getFinalMemoryIO (Memory _ io) = io 
 --(return ())
 
-analisadorSemantico :: ExprTree -> Memory -> Memory
+semanticAnalyzer :: ExprTree -> Memory -> Memory
 -- assign
-analisadorSemantico (DoubleNode a c) st = assignToId st a c
+semanticAnalyzer (DoubleNode a c) st = assignToId st a c
 
 getInput :: String
 getInput = unsafePerformIO (getLine)
@@ -58,5 +58,5 @@ main = do
     case unsafePerformIO (parser (getTokens "problem1.ml")) of
     {
         Left err -> print err;
-        Right ans -> inicAnalisadorSemantico ans
+        Right ans -> initialize ans
     }
