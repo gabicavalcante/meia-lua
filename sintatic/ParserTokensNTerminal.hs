@@ -13,7 +13,7 @@ import Memory
 --         ParsecT  input  state       output
 program :: ParsecT [Token] Memory IO (ExprTree)
 program = do
-        a <- stmts  
+        a <- stmts
         eof
         return (SingleNode a)
 
@@ -27,17 +27,17 @@ stmts = try (
     do
         a <- basicStmt
         return (SingleNode a)
-    ) 
+    )
 
 basicStmt :: ParsecT [Token] Memory IO (ExprTree)
 basicStmt = try (
     -- print
-    do 
+    do
         first <- printToken
         things <- listParam
         colon <- semiColonToken
         return (SingleNode things)
-    ) <|> try ( 
+    ) <|> try (
     do
         first <- assign
         return first
@@ -50,10 +50,10 @@ listParam = try (
     a <- exprNv1
     b <- commaToken
     c <- listParam
-    return (DoubleNode a c) 
+    return (DoubleNode a c)
   ) <|> (
   -- param
-  do 
+  do
     a <- exprNv1
     return (SingleNode a)
   )
@@ -77,13 +77,13 @@ expression = try (
         a <- exprNv1
         return a
     ) <|> try (
-    do 
+    do
         b <- exprAtomic
         return (SingleNode b)
-    ) 
+    )
 
 -- una expression
-exprAtomic :: ParsecT [Token] Memory IO(ExprTree)  
+exprAtomic :: ParsecT [Token] Memory IO(ExprTree)
 exprAtomic = try (
     -- StringAtomic
     do
@@ -196,7 +196,7 @@ operatorNv3 = (
 
 -- ( )
 exprNv4 :: ParsecT [Token] Memory IO(ExprTree)
-exprNv4 = try ( 
+exprNv4 = try (
     do
         a <- openParenthToken
         meio <- exprNv1
@@ -207,10 +207,10 @@ exprNv4 = try (
         a <- exprAtomic
         return a
     ) <|> try  (
-    do   
-        id <- idToken 
+    do
+        id <- idToken
         return (makeToken id)
-    ) 
+    )
 
 memory_assign :: Variable -> Memory -> Memory
 memory_assign symbol (Memory [] io) = Memory [symbol] io
@@ -221,6 +221,11 @@ memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) 
 append_memory :: Variable -> Memory -> Memory
 append_memory variable (Memory [] io) = Memory [variable] io
 append_memory variable (Memory variables io) = Memory (variable : variables) io
+
+lookUpVariable :: String -> Memory -> Variable
+lookUpVariable id1 (Memory((Variable (Id pos2 id2, v2)) : t) io) =
+                                if id1 == id2 then return (Variable(Id pos2 id2, v2))
+                                else lookUpVariable id1 (Memory t io)
 
 
 parser :: [Token] -> IO (Either ParseError ExprTree)
