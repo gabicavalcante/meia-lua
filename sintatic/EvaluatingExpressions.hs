@@ -25,7 +25,10 @@ assignToId st id expr = st1
 
 
 inicAnalisadorSemantico :: ExprTree -> IO()
-inicAnalisadorSemantico tree = analisadorSemantico tree Memory []
+inicAnalisadorSemantico tree = getAnalisadorIO (analisadorSemantico tree (Memory []))
+
+getAnalisadorIO :: Memory -> IO()
+getAnalisadorIO memory = (return ())
 
 analisadorSemantico :: ExprTree -> Memory -> Memory
 -- assign
