@@ -22,7 +22,7 @@ assignToId :: Memory -> ExprTree -> ExprTree -> Memory
 assignToId st id expr = st1
     where
         st1 = evaluateExpr st expr
-        
+
 emptyMemory :: Memory
 emptyMemory = (Memory [] (return()))
 
