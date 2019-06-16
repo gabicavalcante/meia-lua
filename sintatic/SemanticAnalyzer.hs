@@ -31,22 +31,30 @@ initialize :: ExprTree -> IO()
 initialize tree = getFinalMemoryIO (semanticAnalyzer tree emptyMemory)
 
 getFinalMemoryIO :: Memory -> IO()
-getFinalMemoryIO (Memory _ io) = io 
---(return ())
+getFinalMemoryIO (Memory _ io) = io  
 
-semanticAnalyzer :: ExprTree -> Memory -> Memory
--- assign
--- semanticAnalyzer (DoubleNode a c) memory = assignToId memory a c
-semanticAnalyzer (SingleNode a) (Memory table io) = 
-    Memory table2 ((print a) >> io2)
-        where
-            (Memory table2 io2) = semanticAnalyzer a (Memory table io)
-            
-semanticAnalyzer (DoubleNode a b) memory =  
+semanticAnalyzer :: ExprTree -> Memory -> Memory 
+semanticAnalyzer (DoubleNode NonTAssign a b) memory =
     Memory table ((print (a, b)) >> io)
             where
                 (Memory table io) = semanticAnalyzer b memory
                 memory1 = semanticAnalyzer a memory
+
+semanticAnalyzer (DoubleNode NonTStatements a b) memory =  
+    Memory table ((print ("DoubleNode NonTStatements", a, b)) >> io)
+            where
+                (Memory table io) = semanticAnalyzer b memory
+                memory1 = semanticAnalyzer a memory
+
+semanticAnalyzer (SingleNode NonTStatement a) (Memory table io) = 
+    Memory table2 ((print ("SingleNode NonTStatement", a)) >> io2)
+        where
+            (Memory table2 io2) = semanticAnalyzer a (Memory table io)
+            
+semanticAnalyzer (SingleNode NonTProgram a) (Memory table io) = 
+   Memory table2 ((print ("SingleNode NonTProgram", a)) >> io2)
+      where
+           (Memory table2 io2) = semanticAnalyzer a (Memory table io)
                 
 semanticAnalyzer (AtomicToken atomic) (Memory table io) = 
     Memory table ((print atomic) >> io)

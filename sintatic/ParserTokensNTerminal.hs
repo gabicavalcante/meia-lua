@@ -11,22 +11,22 @@ import Memory
 
 -- parsers nao terminais
 --         ParsecT  input  state       output
-program :: ParsecT [Token] Memory IO (ExprTree)
+program :: ParsecT [Token] Memory IO(ExprTree)
 program = do
         a <- stmts
         eof
-        return (SingleNode a)
+        return (SingleNode NonTProgram a)
 
-stmts :: ParsecT [Token] Memory IO (ExprTree)
+stmts :: ParsecT [Token] Memory IO(ExprTree)
 stmts = try (
     do
         a <- basicStmt
         b <- stmts
-        return (DoubleNode a b)
+        return (DoubleNode NonTStatements a b)
     ) <|> try (
     do
         a <- basicStmt
-        return (SingleNode a)
+        return (SingleNode NonTStatement a)
     )
 
 basicStmt :: ParsecT [Token] Memory IO (ExprTree)
@@ -36,7 +36,7 @@ basicStmt = try (
         first <- printToken
         things <- listParam
         colon <- semiColonToken
-        return (SingleNode things)
+        return (SingleNode NonTPrint things)
     ) <|> try (
     do
         first <- assign
@@ -50,12 +50,12 @@ listParam = try (
     a <- exprNv1
     b <- commaToken
     c <- listParam
-    return (DoubleNode a c)
+    return (DoubleNode NonTParams a c)
   ) <|> (
   -- param
   do
     a <- exprNv1
-    return (SingleNode a)
+    return (SingleNode NonTParams a)
   )
 
 assign :: ParsecT [Token] Memory IO(ExprTree)
@@ -64,7 +64,7 @@ assign = do
         b <- attribToken
         c <- expression
         colon <- semiColonToken
-        return (DoubleNode (makeToken a) c)
+        return (DoubleNode NonTAssign (makeToken a) c)
 
 -- Expressions
 -- Nv1 : + e -
@@ -79,7 +79,7 @@ expression = try (
     ) <|> try (
     do
         b <- exprAtomic
-        return (SingleNode b)
+        return b
     )
 
 -- una expression
@@ -110,13 +110,13 @@ exprNv1 = try (
         b <- closeParenthToken
         operator <- operatorNv1
         c <- exprNv1
-        return (TripleNode internalContent operator c)
+        return (TripleNode NonTParams internalContent operator c)
     ) <|> try (
     do
         a <- exprNv2
         operator <- operatorNv1
         b <- exprNv1
-        return (TripleNode a operator b)
+        return (TripleNode NonTParams a operator b)
     ) <|> (
     do
         a <- exprNv2
@@ -142,13 +142,13 @@ exprNv2 = try (
         b <- closeParenthToken
         operator <- operatorNv2
         c <- exprNv2
-        return (TripleNode internalContent operator c)
+        return (TripleNode NonTParams internalContent operator c)
     ) <|> try (
     do
         a <- exprNv3
         operator <- operatorNv2
         b <- exprNv2
-        return (TripleNode a operator b)
+        return (TripleNode NonTParams a operator b)
     ) <|> (
     do
         a <- exprNv3
@@ -174,13 +174,13 @@ exprNv3 = try (
         b <- closeParenthToken
         operator <- operatorNv3
         c <- exprNv3
-        return (TripleNode internalContent operator c)
+        return (TripleNode NonTParams internalContent operator c)
     ) <|> try (
     do
         a <- exprNv4
         operator <- operatorNv3
         b <- exprNv3
-        return (TripleNode a operator b)
+        return (TripleNode NonTParams a operator b)
     ) <|> (
     do
         a <- exprNv4
@@ -209,7 +209,7 @@ exprNv4 = try (
     ) <|> try  (
     do
         id <- idToken
-        return (makeToken id)
+        return (SingleNode NonTId (makeToken id))
     )
 
 memory_assign :: Variable -> Memory -> Memory
@@ -224,8 +224,9 @@ append_memory variable (Memory variables io) = Memory (variable : variables) io
 
 lookUpVariable :: String -> Memory -> Variable
 lookUpVariable id1 (Memory((Variable (Id pos2 id2, v2)) : t) io) =
-                                if id1 == id2 then return (Variable(Id pos2 id2, v2))
+                                if id1 == id2 then (Variable(Id pos2 id2, v2))
                                 else lookUpVariable id1 (Memory t io)
+
 lookUpVariable id1 (Memory [] io) =  error "Variavel não encontrada"
 
 parser :: [Token] -> IO (Either ParseError ExprTree)
