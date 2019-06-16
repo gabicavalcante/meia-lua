@@ -10,7 +10,7 @@ evaluateExpr :: Memory -> ExprTree -> Memory
 evaluateExpr memory exprTree = case exprTree of
     -- atomics
     AtomicToken a -> case a of
-        IntLit _ v -> Memory[]
+        IntLit _ v -> emptyMemory
         --IntLit _ v -> updateState(memory_assign (Variable(IntType v)))
         --IntLit _ v -> (memory, (IntType, Int v))
         --FloatLit _ v -> (memory, (FloatType, Float v))
@@ -22,13 +22,16 @@ assignToId :: Memory -> ExprTree -> ExprTree -> Memory
 assignToId st id expr = st1
     where
         st1 = evaluateExpr st expr
-
+        
+emptyMemory :: Memory
+emptyMemory = (Memory [] (return()))
 
 inicAnalisadorSemantico :: ExprTree -> IO()
-inicAnalisadorSemantico tree = getAnalisadorIO (analisadorSemantico tree (Memory []))
+inicAnalisadorSemantico tree = getFinalMemoryIO (analisadorSemantico tree emptyMemory)
 
-getAnalisadorIO :: Memory -> IO()
-getAnalisadorIO memory = (return ())
+getFinalMemoryIO :: Memory -> IO()
+getFinalMemoryIO (Memory _ io) = io 
+--(return ())
 
 analisadorSemantico :: ExprTree -> Memory -> Memory
 -- assign

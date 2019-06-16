@@ -4,7 +4,7 @@ import Tokens
 -- (nome e profundidade do subbloco)
 data Scope = Scope (String, Int) deriving (Eq, Show)
 
-data Memory = Memory [Variable] deriving (Eq, Show)
+data Memory = Memory [Variable] (IO ()) --deriving (Eq, Show)
 --                        id    tipo valor escopo
 --data Variable = Variable String Type Value Scope deriving (Eq, Show)
 data Variable = Variable (Token, Token) deriving (Eq, Show)

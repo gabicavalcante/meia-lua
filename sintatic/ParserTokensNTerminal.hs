@@ -213,18 +213,18 @@ exprNv4 = try (
     ) 
 
 memory_assign :: Variable -> Memory -> Memory
-memory_assign symbol (Memory []) = Memory [symbol]
-memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t)) =
-                                if id1 == id2 then append_memory (Variable(Id pos2 id2, v1)) (Memory t)
-                                else append_memory (Variable (Id pos2 id2, v2)) (memory_assign (Variable (Id pos1 id1, v1)) (Memory t))
+memory_assign symbol (Memory [] io) = Memory [symbol] io
+memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t) io) =
+                                if id1 == id2 then append_memory (Variable(Id pos2 id2, v1)) (Memory t io)
+                                else append_memory (Variable (Id pos2 id2, v2)) (memory_assign (Variable (Id pos1 id1, v1)) (Memory t io))
 
 append_memory :: Variable -> Memory -> Memory
-append_memory variable (Memory []) = Memory [variable]
-append_memory variable (Memory variables) = Memory(variable : variables)
+append_memory variable (Memory [] io) = Memory [variable] io
+append_memory variable (Memory variables io) = Memory (variable : variables) io
 
 
 parser :: [Token] -> IO (Either ParseError ExprTree)
-parser tokens = runParserT program (Memory []) "Error message" tokens
+parser tokens = runParserT program (Memory [] (return())) "Error message" tokens
 
 --main :: IO ()
 --main = case unsafePerformIO (parser (getTokens "problem1.ml")) of
