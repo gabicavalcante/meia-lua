@@ -10,15 +10,15 @@ evaluateExpr :: Memory -> ExprTree -> (Memory, (Type, Value))
 evaluateExpr memory exprTree = case exprTree of
     -- atomics
     AtomicToken a -> case a of
-        IntLit _ v -> emptyMemory
-        IntLit _ v -> updateState(memory_assign (Variable(IntType v)))
+        --IntLit _ v -> emptyMemory
+        --IntLit _ v -> updateState(memory_assign (Variable(IntType v)))
         IntLit _ v -> (memory, (IntType, Int v))
         FloatLit _ v -> (memory, (FloatType, Float v))
         StrLit _ v -> (memory, (StringType, String v))
         SymTrue _ -> (memory, (BoolType, Bool True))
         SymFalse _ -> (memory, (BoolType, Bool False))
 
-    SingleNode a -> evaluateSingleNode st a
+    SingleNode a -> evaluateSingleNode memory a
 
     --DoubleNode (AtomicToken (SymBoolNot _)) b -> res
     --    where
@@ -30,9 +30,9 @@ evaluateExpr memory exprTree = case exprTree of
 evaluateSingleNode :: Memory -> ExprTree -> (Memory, (Type, Value))
 evaluateSingleNode memory (AtomicToken (Id _ id)) = res
     where
-        (Variable (typ val )) = lookUpVariable memory id
+        (id1,typ,val) = lookUpVariable id memory
         res = (memory, (typ, val))
-evaluateSingleNode memory (SingleNode a) = (evaluateSingleNode st a)
+evaluateSingleNode memory (SingleNode a) = (evaluateSingleNode memory a)
 
 evaluateTriTree :: Memory -> ExprTree -> ExprTree -> ExprTree -> (Memory, (Type, Value))
 -- Adicao :   a + b
@@ -57,10 +57,54 @@ evaluateTriTree mem (AtomicToken (SymOpMult _)) a b = res
         res = (mem2, exprMult (type1, val1) (type2, val2))
 
 
+intToFloat :: Int -> Float
+intToFloat a = fromInteger (toInteger a)
+
+exprSum :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprSum (IntType, Int a) (IntType, Int b) = (IntType, Int (a + b))
+exprSum (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a + b))
+exprSum (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a + b ))
+exprSum (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a + intToFloat b ))
+exprSum (StringType, String a) (StringType, String b) = (StringType, String (a ++ b))
+exprSum a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprMinus :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprMinus (IntType, Int a) (IntType, Int b) = (IntType, Int (a - b))
+exprMinus (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a - b))
+exprMinus (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a - b ))
+exprMinus (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a - intToFloat b ))
+exprMinus a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprMult :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprMult (IntType, Int a) (IntType, Int b) = (IntType, Int (a * b))
+exprMult (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a * b))
+exprMult (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a * b ))
+exprMult (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a * intToFloat b ))
+exprMult a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprDiv :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprDiv (IntType, Int a) (IntType, Int b) = (IntType, Int (a `div` b))
+exprDiv (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a / b))
+exprDiv (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a / b ))
+exprDiv (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a / intToFloat b ))
+exprDiv a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprMod :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprMod (IntType, Int a) (IntType, Int b) = (IntType, Int (a `rem` b))
+exprMod a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
+exprExp :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprExp (IntType, Int a) (IntType, Int b) = (IntType, Int (a ^ b))
+exprExp (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a ** b))
+exprExp (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a ** b ))
+exprExp (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a ** intToFloat b ))
+exprExp a b = error ("Operação entre os tipos " ++ (show a) ++ " e " ++ (show b) ++ " não é permitida")
+
 assignToId :: Memory -> ExprTree -> ExprTree -> Memory
-assignToId st id expr = st1
+assignToId mem id expr = mem1
     where
-        st1 = evaluateExpr st expr
+        (mem, (type1, value1)) = evaluateExpr mem expr
+        mem1 = memory_assign Variable(id, type1, value1) mem
 
 emptyMemory :: Memory
 emptyMemory = (Memory [] (return()))

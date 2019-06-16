@@ -143,7 +143,7 @@ printToken = tokenPrim show update_pos get_token where
 
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos
-update_pos pos _ []      = pos  
+update_pos pos _ []      = pos
 
 makeToken :: Token -> ExprTree
 makeToken tok = AtomicToken tok

@@ -213,18 +213,18 @@ exprNv4 = try (
     )
 
 memory_assign :: Variable -> Memory -> Memory
-memory_assign symbol (Memory [] io) = Memory [symbol] io
-memory_assign (Variable (Id pos1 id1, v1)) (Memory((Variable (Id pos2 id2, v2)) : t) io) =
-                                if id1 == id2 then append_memory (Variable(Id pos2 id2, v1)) (Memory t io)
-                                else append_memory (Variable (Id pos2 id2, v2)) (memory_assign (Variable (Id pos1 id1, v1)) (Memory t io))
+memory_assign variable (Memory [] io) = Memory [variable] io
+memory_assign id1 type1 v1 (Memory((Variable (id2 type2 v2)) : t) io) =
+                                if id1 == id2 then append_memory (Variable id2 type2 v1) (Memory t io)
+                                else append_memory (Variable (id2 type2 v2)) (memory_assign (Variable (id1 type1 v1)) (Memory t io))
 
 append_memory :: Variable -> Memory -> Memory
 append_memory variable (Memory [] io) = Memory [variable] io
 append_memory variable (Memory variables io) = Memory (variable : variables) io
 
 lookUpVariable :: String -> Memory -> Variable
-lookUpVariable id1 (Memory((Variable (Id pos2 id2, v2)) : t) io) =
-                                if id1 == id2 then return (Variable(Id pos2 id2, v2))
+lookUpVariable id1 (Memory((Variable (id2 type2 v2)) : t) io) =
+                                if id1 == id2 then Variable(id2 type2 v2)
                                 else lookUpVariable id1 (Memory t io)
 lookUpVariable id1 (Memory [] io) =  error "Variavel não encontrada"
 
