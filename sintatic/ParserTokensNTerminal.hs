@@ -226,7 +226,7 @@ lookUpVariable :: String -> Memory -> Variable
 lookUpVariable id1 (Memory((Variable (Id pos2 id2, v2)) : t) io) =
                                 if id1 == id2 then return (Variable(Id pos2 id2, v2))
                                 else lookUpVariable id1 (Memory t io)
-
+lookUpVariable id1 (Memory [] io) =  error "Variavel não encontrada"
 
 parser :: [Token] -> IO (Either ParseError ExprTree)
 parser tokens = runParserT program (Memory [] (return())) "Error message" tokens
