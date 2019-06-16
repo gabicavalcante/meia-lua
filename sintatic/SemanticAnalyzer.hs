@@ -52,22 +52,6 @@ semanticAnalyzer (AtomicToken atomic) (Memory table io) =
     Memory table ((print atomic) >> io)
 
 
-getInput :: String
-getInput = unsafePerformIO (getLine)
-
-getInputOfType :: Token -> (Type, Value)
-getInputOfType (TypeInt _) = (IntType, Int value)
-    where
-        value = read getInput :: Int
-getInputOfType (TypeFloat _) = (FloatType, Float value)
-    where
-        value = read getInput :: Float
-getInputOfType (TypeString _) = (StringType, String value)
-    where
-        value = getInput :: String
-getInputOfType _ = error "Operação de scan não permitida para esse tipo"
-
-
 main :: IO ()
 main = do
     case unsafePerformIO (parser (getTokens "problem1.ml")) of
