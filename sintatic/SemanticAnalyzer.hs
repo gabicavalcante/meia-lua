@@ -27,6 +27,7 @@ emptyMemory :: Memory
 emptyMemory = (Memory [] (return()))
 
 initialize :: ExprTree -> IO()
+--initialize tree = semanticAnalyzer tree emptyMemory
 initialize tree = getFinalMemoryIO (semanticAnalyzer tree emptyMemory)
 
 getFinalMemoryIO :: Memory -> IO()
@@ -35,7 +36,21 @@ getFinalMemoryIO (Memory _ io) = io
 
 semanticAnalyzer :: ExprTree -> Memory -> Memory
 -- assign
-semanticAnalyzer (DoubleNode a c) st = assignToId st a c
+-- semanticAnalyzer (DoubleNode a c) memory = assignToId memory a c
+semanticAnalyzer (SingleNode a) (Memory table io) = 
+    Memory table2 ((print a) >> io2)
+        where
+            (Memory table2 io2) = semanticAnalyzer a (Memory table io)
+            
+semanticAnalyzer (DoubleNode a b) memory =  
+    Memory table ((print (a, b)) >> io)
+            where
+                (Memory table io) = semanticAnalyzer b memory
+                memory1 = semanticAnalyzer a memory
+                
+semanticAnalyzer (AtomicToken atomic) (Memory table io) = 
+    Memory table ((print atomic) >> io)
+
 
 getInput :: String
 getInput = unsafePerformIO (getLine)
