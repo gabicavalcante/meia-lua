@@ -222,6 +222,7 @@ append_memory :: Variable -> Memory -> Memory
 append_memory variable (Memory []) = Memory [variable]
 append_memory variable (Memory variables) = Memory(variable : variables)
 
+
 parser :: [Token] -> IO (Either ParseError ExprTree)
 parser tokens = runParserT program (Memory []) "Error message" tokens
 
