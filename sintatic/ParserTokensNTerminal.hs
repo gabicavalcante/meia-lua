@@ -212,23 +212,6 @@ exprNv4 = try (
         return (SingleNode NonTId (makeToken id))
     )
 
-memory_assign :: Variable -> Memory -> Memory
-memory_assign variable (Memory [] _) = Memory [variable] (return())
-memory_assign (Variable id1 type1 value1) (Memory((Variable id2 type2 value2) : t) io) =
-                                if id1 == id2 then append_memory (Variable id2 type2 value1) (Memory t io)
-                                else append_memory (Variable id2 type2 value2) (memory_assign (Variable id1 type1 value1) (Memory t io))
-
-append_memory :: Variable -> Memory -> Memory
-append_memory variable (Memory [] io) = Memory [variable] io
-append_memory variable (Memory variables io) = Memory (variable : variables) io
-
-lookUpVariable :: String -> Memory -> Variable
-lookUpVariable id1 (Memory((Variable id2 type2 value2) : t) io) =
-                                if id1 == id2 then (Variable id2 type2 value2)
-                                else lookUpVariable id1 (Memory t io)
-
-lookUpVariable id1 (Memory [] io) =  error "Variavel não encontrada"
-
 parser :: [Token] -> IO (Either ParseError ExprTree)
 parser tokens = runParserT program (Memory [] (return())) "Error message" tokens
 

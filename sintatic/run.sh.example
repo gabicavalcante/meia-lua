@@ -1,1 +1,1 @@
-runhaskell -i/.../meia-lua/lex ParserTokensNTerminal.hs
+runhaskell -i/Users/.../meia-lua/lex SemanticAnalyzer.hs
