@@ -31,11 +31,14 @@ evaluateExpr memory exprTree = case exprTree of
         IntLit _ v      -> (memory, (IntType, Int v))
         FloatLit _ v    -> (memory, (FloatType, Float v))
         StrLit _ v      -> (memory, (StringType, String v))
-        SymTrue _ -> (memory, (BoolType, Bool True))
-        SymFalse _ -> (memory, (BoolType, Bool False))
+        SymTrue _       -> (memory, (BoolType, Bool True))
+        SymFalse _      -> (memory, (BoolType, Bool False))
  
     SingleNode nonT a -> case nonT of
         NonTId -> evaluateSingleNode memory a
+
+    TripleNode nonT a b c -> case nonT of
+        NonTExpr -> evaluateTriTree memory a b c
 
 evaluateSingleNode :: Memory -> ExprTree -> (Memory, (Type, Value))
 evaluateSingleNode memory (AtomicToken (Id _ id)) = res
@@ -44,6 +47,22 @@ evaluateSingleNode memory (AtomicToken (Id _ id)) = res
         res = (memory, (typ, val))
 --evaluateSingleNode memory (SingleNode a) = (evaluateSingleNode memory a)
 
+evaluateTriTree :: Memory -> ExprTree -> ExprTree -> ExprTree -> (Memory, (Type, Value))
+-- Adicao :   a + b
+evaluateTriTree mem a (AtomicToken (SymOpPlus _)) b = res
+    where
+        (mem1, (type1, val1)) = evaluateExpr mem a
+        (mem2, (type2, val2)) = evaluateExpr mem1 b
+        res = (mem2, exprSum (type1, val1) (type2, val2))
+
+intToFloat :: Int -> Float
+intToFloat a = fromInteger (toInteger a)
+
+exprSum :: (Type, Value) -> (Type, Value) -> (Type, Value)
+exprSum (IntType, Int a) (IntType, Int b) = (IntType, Int (a + b))
+exprSum (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a + b))
+exprSum (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a + b ))
+exprSum (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a + intToFloat b ))
 
 assignToId :: Memory -> ExprTree -> ExprTree -> Memory
 assignToId (Memory table io) (AtomicToken (Id _ var)) expr = -- mem1 

@@ -110,13 +110,13 @@ exprNv1 = try (
         b <- closeParenthToken
         operator <- operatorNv1
         c <- exprNv1
-        return (TripleNode NonTParams internalContent operator c)
+        return (TripleNode NonTExpr internalContent operator c)
     ) <|> try (
     do
         a <- exprNv2
         operator <- operatorNv1
         b <- exprNv1
-        return (TripleNode NonTParams a operator b)
+        return (TripleNode NonTExpr a operator b)
     ) <|> (
     do
         a <- exprNv2
@@ -142,13 +142,13 @@ exprNv2 = try (
         b <- closeParenthToken
         operator <- operatorNv2
         c <- exprNv2
-        return (TripleNode NonTParams internalContent operator c)
+        return (TripleNode NonTExpr internalContent operator c)
     ) <|> try (
     do
         a <- exprNv3
         operator <- operatorNv2
         b <- exprNv2
-        return (TripleNode NonTParams a operator b)
+        return (TripleNode NonTExpr a operator b)
     ) <|> (
     do
         a <- exprNv3
@@ -174,13 +174,13 @@ exprNv3 = try (
         b <- closeParenthToken
         operator <- operatorNv3
         c <- exprNv3
-        return (TripleNode NonTParams internalContent operator c)
+        return (TripleNode NonTExpr internalContent operator c)
     ) <|> try (
     do
         a <- exprNv4
         operator <- operatorNv3
         b <- exprNv3
-        return (TripleNode NonTParams a operator b)
+        return (TripleNode NonTExpr a operator b)
     ) <|> (
     do
         a <- exprNv4
