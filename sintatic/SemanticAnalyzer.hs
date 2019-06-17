@@ -11,14 +11,15 @@ evaluateExpr memory exprTree = case exprTree of
     -- atomics
     AtomicToken a -> case a of
         IntLit _ v -> (memory, (IntType, Int v))
-             -- (memory_assign (Variable(IntType v)), (IntType, Int v)) 
+        
 
 assignToId :: Memory -> ExprTree -> ExprTree -> Memory
-assignToId (Memory table io) id expr = --memory1
-    Memory table2 ((print ("assignToId", table)) >> io2)
+assignToId (Memory table io) (AtomicToken (Id _ var)) expr = -- mem1 
+    Memory table2 ((print (var)) >> io2)
         where
-            ((Memory table2 io2), exprRes) = evaluateExpr (Memory table io) expr
-
+            ((Memory table io), (type1, value1)) = evaluateExpr (Memory table io) expr
+            (Memory table2 io2) = memory_assign (Variable var type1 value1) (Memory table io)
+        
 emptyMemory :: Memory
 emptyMemory = (Memory [] (return()))
 
@@ -26,33 +27,28 @@ initialize :: ExprTree -> IO()
 initialize tree = getFinalMemoryIO (semanticAnalyzer tree emptyMemory)
 
 getFinalMemoryIO :: Memory -> IO()
-getFinalMemoryIO (Memory _ io) = io
+getFinalMemoryIO (Memory table io) = io
 
 semanticAnalyzer :: ExprTree -> Memory -> Memory 
-semanticAnalyzer (SingleNode NonTStatement a) memory = semanticAnalyzer a memory
 --semanticAnalyzer (SingleNode NonTStatement a) (Memory table io) = 
 --    Memory table2 ((print ("SingleNode NonTStatement", a)) >> io2)
 --        where
 --            (Memory table2 io2) = semanticAnalyzer a (Memory table io)
 
-semanticAnalyzer (DoubleNode NonTAssign a c) memory = assignToId memory a c
---semanticAnalyzer (DoubleNode NonTAssign a b) memory =
---    Memory table ((print (a, b)) >> io)
---            where
---                (Memory table io) = semanticAnalyzer b memory
---                memory1 = semanticAnalyzer a memory
+-- assign
+semanticAnalyzer (DoubleNode NonTAssign a b) memory =
+     assignToId memory a b
+    --assignToId memory a b  
 
-semanticAnalyzer (DoubleNode NonTStatements a b) memory =  
-    Memory table ((print ("DoubleNode NonTStatements", a, b)) >> io)
-            where
-                (Memory table io) = semanticAnalyzer b memory
-                memory1 = semanticAnalyzer a memory
-            
-semanticAnalyzer (SingleNode NonTProgram a) (Memory table io) = 
-   Memory table2 ((print ("SingleNode NonTProgram", a)) >> io2)
-      where
-           (Memory table2 io2) = semanticAnalyzer a (Memory table io)
-                
+-- statements 
+semanticAnalyzer (DoubleNode _ a b) memory =
+    semanticAnalyzer b memory1
+    where
+       memory1 = semanticAnalyzer a memory
+       
+semanticAnalyzer (SingleNode _ a) memory = 
+    semanticAnalyzer a memory
+
 semanticAnalyzer (AtomicToken atomic) (Memory table io) = 
     Memory table ((print atomic) >> io)
 

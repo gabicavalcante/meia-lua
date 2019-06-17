@@ -213,7 +213,7 @@ exprNv4 = try (
     )
 
 memory_assign :: Variable -> Memory -> Memory
-memory_assign variable (Memory [] io) = Memory [variable] io
+memory_assign variable (Memory [] _) = Memory [variable] (return())
 memory_assign (Variable id1 type1 value1) (Memory((Variable id2 type2 value2) : t) io) =
                                 if id1 == id2 then append_memory (Variable id2 type2 value1) (Memory t io)
                                 else append_memory (Variable id2 type2 value2) (memory_assign (Variable id1 type1 value1) (Memory t io))
