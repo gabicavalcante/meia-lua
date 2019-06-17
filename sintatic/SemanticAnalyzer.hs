@@ -20,9 +20,8 @@ append_memory variable (Memory variables io) = Memory (variable : variables) io
 
 lookUpVariable :: String -> Memory -> Variable
 lookUpVariable id1 (Memory((Variable id2 type2 value2) : t) io) =
-                                if id1 == id2 then (Variable id2 type2 value2)
+                                if id1 == id2 then (Variable id1 type2 value2)
                                 else lookUpVariable id1 (Memory t io)
-
 lookUpVariable id1 (Memory [] io) =  error "Variavel não encontrada"
 
 evaluateExpr :: Memory -> ExprTree -> (Memory, (Type, Value))
@@ -34,6 +33,17 @@ evaluateExpr memory exprTree = case exprTree of
         StrLit _ v      -> (memory, (StringType, String v))
         SymTrue _ -> (memory, (BoolType, Bool True))
         SymFalse _ -> (memory, (BoolType, Bool False))
+ 
+    SingleNode nonT a -> case nonT of
+        NonTId -> evaluateSingleNode memory a
+
+evaluateSingleNode :: Memory -> ExprTree -> (Memory, (Type, Value))
+evaluateSingleNode memory (AtomicToken (Id _ id)) = res
+    where
+        (Variable id1 typ val) = lookUpVariable id memory
+        res = (memory, (typ, val))
+--evaluateSingleNode memory (SingleNode a) = (evaluateSingleNode memory a)
+
 
 assignToId :: Memory -> ExprTree -> ExprTree -> Memory
 assignToId (Memory table io) (AtomicToken (Id _ var)) expr = -- mem1 
@@ -42,6 +52,21 @@ assignToId (Memory table io) (AtomicToken (Id _ var)) expr = -- mem1
             (men, (type1, value1)) = evaluateExpr (Memory table io) expr
             (Memory table2 io2) = memory_assign (Variable var type1 value1) men
 
+printAll :: Memory -> ExprTree -> Memory 
+printAll memory (SingleNode NonTParams expr) = 
+    (Memory midTable ((print (var_type, val)) >> finalIO))
+        where
+            ((Memory midTable midIO), (var_type, val)) = evaluateExpr memory expr
+            finalIO = midIO >> (printOne val) >> (putStrLn "")
+
+printOne :: Value -> IO()
+printOne val = case val of
+    (Int a) -> putStr ((show a)++" ") 
+    (Float a) -> putStr ((show a)++" ") 
+    (String a) -> putStr a
+    (Bool a) -> putStr ((show a)++" ")  
+    --_ -> error "error to print"
+    
 initialize :: ExprTree -> IO() 
 initialize tree = getFinalMemoryIO (semanticAnalyzer tree (Memory [] (return())))
 
@@ -56,7 +81,7 @@ semanticAnalyzer :: ExprTree -> Memory -> Memory
 
 -- program
 semanticAnalyzer (SingleNode NonTProgram a) (Memory table io) = 
-    Memory table2 io2 -- Memory table2 ((print (a)) >> io2)
+    Memory table2 io2 --((print (a)) >> io2)
         where
             (Memory table2 io2) = semanticAnalyzer a (Memory table io)
         
@@ -75,6 +100,9 @@ semanticAnalyzer (DoubleNode NonTAssign a b) memory =
     Memory table2 io2
         where 
             (Memory table2 io2) = assignToId memory a b 
+
+semanticAnalyzer (SingleNode NonTPrint params) memory = 
+    printAll memory params
 
 
 main :: IO ()
