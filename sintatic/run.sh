@@ -1,1 +1,0 @@
-runhaskell -i/Users/gabriela/Student/LPCP/meia-lua/lex types.hs

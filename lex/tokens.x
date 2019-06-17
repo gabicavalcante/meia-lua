@@ -17,8 +17,8 @@ tokens :-
   "--".*.                                     ;
   int                                         { \p s -> TypeInt p }
   float                                       { \p s -> TypeFloat p }
-  string                                      { \p s -> TypeString p } 
-  bool                                        { \p s -> TypeBoolean p } 
+  string                                      { \p s -> TypeString p }
+  bool                                        { \p s -> TypeBoolean p }
   $digit+\.$digit+                            { \p s -> FloatLit p (read s) }
   $digit+                                     { \p s -> IntLit p (read s) }
   \:                                          { \p s -> Colon p }
@@ -59,19 +59,19 @@ tokens :-
   \$                                          { \p s -> SymAdressOp p }
   print                                       { \p s -> Print p }
   scan                                        { \p s -> Scan p }
-  do                                          { \p s -> Do p } 
-  for                                         { \p s -> For p }    
-  while                                       { \p s -> While p } 
+  do                                          { \p s -> Do p }
+  for                                         { \p s -> For p }
+  while                                       { \p s -> While p }
   if                                          { \p s -> If p }
-  then                                        { \p s -> Then p } 
-  else                                        { \p s -> Else p } 
+  then                                        { \p s -> Then p }
+  else                                        { \p s -> Else p }
   elif                                        { \p s -> Elif p }
   procedure                                   { \p s -> Procedure p }
   function                                    { \p s -> Function p }
   return                                      { \p s -> Return p }
   break                                       { \p s -> Break p }
-  continue                                    { \p s -> Continue p }  
-  table                                       { \p s -> Table p } 
+  continue                                    { \p s -> Continue p }
+  table                                       { \p s -> Table p }
   $alpha [$alpha $digit \_ \']*               { \p s -> Id p s }
   \" [^\"]* \"       { \p s -> StrLit p (firstLast s) }
 {
@@ -87,7 +87,7 @@ firstLast xs = tail (init xs)
 data Token =
   TypeInt AlexPosn                |
   TypeFloat AlexPosn              |
-  TypeString AlexPosn             | 
+  TypeString AlexPosn             |
   TypeBoolean AlexPosn            |
   Attrib AlexPosn                 |
   OpenParenth AlexPosn            |
@@ -105,17 +105,17 @@ data Token =
   Print AlexPosn                  |
   Scan AlexPosn                   |
   Do AlexPosn                     |
-  If AlexPosn                     | 
+  If AlexPosn                     |
   Then AlexPosn                   |
-  Else AlexPosn                   | 
-  Elif AlexPosn                   | 
-  For AlexPosn                    |  
-  While AlexPosn                  | 
+  Else AlexPosn                   |
+  Elif AlexPosn                   |
+  For AlexPosn                    |
+  While AlexPosn                  |
   Procedure AlexPosn              |
   Function AlexPosn               |
   Return AlexPosn                 |
   Break AlexPosn                  |
-  Continue AlexPosn               |  
+  Continue AlexPosn               |
   Table AlexPosn                  |
   FloatLit AlexPosn Float         |
   IntLit AlexPosn Int             |
@@ -142,8 +142,8 @@ data Token =
   SymTrue AlexPosn                |
   SymFalse AlexPosn               |
   SymLessThan AlexPosn            |
-  SymGreaterThan AlexPosn         | 
-  Id AlexPosn String    
+  SymGreaterThan AlexPosn         |
+  Id AlexPosn String
   deriving (Eq,Show)
 
 getTokens fn = unsafePerformIO (getTokensAux fn)
