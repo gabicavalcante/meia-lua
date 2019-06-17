@@ -30,15 +30,13 @@ evaluateExpr memory exprTree = case exprTree of
     AtomicToken a -> case a of
         IntLit _ v      -> (memory, (IntType, Int v))
         FloatLit _ v    -> (memory, (FloatType, Float v))
-        StrLit _ v      -> (memory, (StringType, String v))
-        SymTrue _       -> (memory, (BoolType, Bool True))
-        SymFalse _      -> (memory, (BoolType, Bool False))
- 
+        StrLit _ v      -> (memory, (StringType, String v)) 
+    -- print
     SingleNode nonT a -> case nonT of
         NonTId -> evaluateSingleNode memory a
-
+    -- expression
     TripleNode nonT a b c -> case nonT of
-        NonTExpr -> evaluateTriTree memory a b c
+        NonTExpr -> evaluateOp memory a b c
 
 evaluateSingleNode :: Memory -> ExprTree -> (Memory, (Type, Value))
 evaluateSingleNode memory (AtomicToken (Id _ id)) = res
@@ -47,22 +45,46 @@ evaluateSingleNode memory (AtomicToken (Id _ id)) = res
         res = (memory, (typ, val))
 --evaluateSingleNode memory (SingleNode a) = (evaluateSingleNode memory a)
 
-evaluateTriTree :: Memory -> ExprTree -> ExprTree -> ExprTree -> (Memory, (Type, Value))
+evaluateOp :: Memory -> ExprTree -> ExprTree -> ExprTree -> (Memory, (Type, Value))
 -- Adicao :   a + b
-evaluateTriTree mem a (AtomicToken (SymOpPlus _)) b = res
+evaluateOp mem a (AtomicToken (SymOpPlus _)) b = res
     where
         (mem1, (type1, val1)) = evaluateExpr mem a
         (mem2, (type2, val2)) = evaluateExpr mem1 b
-        res = (mem2, exprSum (type1, val1) (type2, val2))
+        res = (mem2, opSum (type1, val1) (type2, val2))
+-- Subtracao :  a - b
+evaluateOp mem a (AtomicToken (SymOpMinus _)) b = res
+    where
+        (mem1, (type1, val1)) = evaluateExpr mem a
+        (mem2, (type2, val2)) = evaluateExpr mem1 b
+        res = (mem2, opMinus (type1, val1) (type2, val2))
+-- Multiplicacao : a * b
+evaluateOp mem a (AtomicToken (SymOpMult _)) b = res
+    where
+        (mem1, (type1, val1)) = evaluateExpr mem a
+        (mem2, (type2, val2)) = evaluateExpr mem1 b
+        res = (mem2, opMult (type1, val1) (type2, val2))
 
-intToFloat :: Int -> Float
-intToFloat a = fromInteger (toInteger a)
+toFloat :: Int -> Float
+toFloat a = fromInteger (toInteger a)
 
-exprSum :: (Type, Value) -> (Type, Value) -> (Type, Value)
-exprSum (IntType, Int a) (IntType, Int b) = (IntType, Int (a + b))
-exprSum (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a + b))
-exprSum (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( intToFloat a + b ))
-exprSum (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a + intToFloat b ))
+opSum :: (Type, Value) -> (Type, Value) -> (Type, Value)
+opSum (IntType, Int a) (IntType, Int b) = (IntType, Int (a + b))
+opSum (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a + b))
+opSum (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( toFloat a + b ))
+opSum (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a + toFloat b ))
+
+opMinus :: (Type, Value) -> (Type, Value) -> (Type, Value)
+opMinus (IntType, Int a) (IntType, Int b) = (IntType, Int (a - b))
+opMinus (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a - b))
+opMinus (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( toFloat a - b ))
+opMinus (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a - toFloat b ))
+
+opMult :: (Type, Value) -> (Type, Value) -> (Type, Value)
+opMult (IntType, Int a) (IntType, Int b) = (IntType, Int (a * b))
+opMult (FloatType, Float a) (FloatType, Float b) = (FloatType, Float (a * b))
+opMult (IntType, Int a) (FloatType, Float b) = (FloatType, Float ( toFloat a * b ))
+opMult (FloatType, Float a) (IntType, Int b) = (FloatType, Float ( a * toFloat b ))
 
 assignToId :: Memory -> ExprTree -> ExprTree -> Memory
 assignToId (Memory table io) (AtomicToken (Id _ var)) expr = -- mem1 
@@ -73,18 +95,17 @@ assignToId (Memory table io) (AtomicToken (Id _ var)) expr = -- mem1
 
 printAll :: Memory -> ExprTree -> Memory 
 printAll memory (SingleNode NonTParams expr) = 
-    (Memory midTable ((print (var_type, val)) >> finalIO))
+    (Memory table io) --((print (var_type, val)) >> io))
         where
-            ((Memory midTable midIO), (var_type, val)) = evaluateExpr memory expr
-            finalIO = midIO >> (printOne val) >> (putStrLn "")
+            ((Memory table io2), (var_type, val)) = evaluateExpr memory expr
+            io = io2 >> (printValue val) >> (putStrLn "")
 
-printOne :: Value -> IO()
-printOne val = case val of
+printValue :: Value -> IO()
+printValue val = case val of
     (Int a) -> putStr ((show a)++" ") 
     (Float a) -> putStr ((show a)++" ") 
     (String a) -> putStr a
-    (Bool a) -> putStr ((show a)++" ")  
-    --_ -> error "error to print"
+    (Bool a) -> putStr ((show a)++" ")   
     
 initialize :: ExprTree -> IO() 
 initialize tree = getFinalMemoryIO (semanticAnalyzer tree (Memory [] (return())))
